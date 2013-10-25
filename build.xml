@@ -1,0 +1,94 @@
+<project name="Rummikub" basedir="." default="both" >
+	
+    <description>
+        The buildfile rummikub
+    </description>
+
+	<!-- File structure -->
+    <property name="src"            value="src"/>
+    <property name="bin"            value="bin"/>
+    <property name="dist"           value="dist"/>
+    <property name="docs"           value="docs"/>
+    <property name="images"         value="images"/>
+	
+    
+    <!-- Program and arguments -->
+    <property name="client_name" 	value="Client"/>
+    <property name="server_name" 	value="Server"/>
+    <property name="serverAddress"      value="localhost"/>
+    
+	
+    <!--**************************************************************-->
+    <!--*************** DONT TOUCH BELLOW THIS LINE ******************-->
+    <!--**************************************************************-->
+
+    <target name="both" 	depends="javadoc, client_jar, server_jar" />
+    <target name="client" 	depends="client_jar"/>
+    <target name="server" 	depends="server_jar"/>
+		
+    
+    <!-- Client Build -->
+    <target name="client_class">
+        <mkdir dir="${bin}"/>
+        <javac includeantruntime="false" source="1.6" target="1.6" 
+                srcdir="${src}" destdir="${bin}"
+                debug="true" debuglevel="lines,vars,source">
+        </javac>
+    </target>
+	
+    <target name="client_jar" depends="client_class">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/${client_name}.jar" basedir="${bin}">
+            <manifest>
+                <attribute name="Main-Class" 
+                           value="${ant.project.name}.${client_name}"/>
+            </manifest>
+            <fileset dir="${images}"/>
+        </jar>
+    </target>
+			
+                        
+    <!-- Server Build -->
+    <target name="server_class">
+        <mkdir dir="${bin}"/>
+        <javac includeantruntime="false" source="1.6" target="1.6" 
+                srcdir="${src}" destdir="${bin}"
+                debug="true" debuglevel="lines,vars,source">
+        </javac>
+    </target>
+	
+    <target name="server_jar" depends="server_class">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/${server_name}.jar" basedir="${bin}">
+            <manifest>
+                <attribute name="Main-Class" 
+                           value="${ant.project.name}.${server_name}"/>
+            </manifest>
+        </jar>
+    </target>
+
+
+    <!-- Running the programs -->
+    <target name="client_run">
+        <java jar="${dist}/${client_name}.jar" fork="true">
+            <arg value="${serverAddress}"/>
+        </java>
+    </target>
+   
+	
+    <target name="server_run">
+        <java jar="${dist}/${server_name}.jar" fork="true" />
+    </target>
+	
+		
+    <!-- Clean + Javadocs -->		
+    <target name="clean" description="Removes all .class and .jar files">
+        <delete dir="${bin}"/>
+        <delete dir="${dist}"/>
+    </target>
+	    
+    <target name="javadoc">
+        <delete dir="${docs}"/>
+        <javadoc sourcepath="${src}" destdir="${docs}" private="true" use="true" header="true" footer="true" windowtitle="Checkers Documentation"/>
+    </target>
+</project>
