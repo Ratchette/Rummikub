@@ -11,11 +11,11 @@
     <property name="docs"           value="docs"/>
     <property name="images"         value="images"/>
 	
-    
     <!-- Program and arguments -->
-    <property name="client_name" 	value="Client"/>
-    <property name="server_name" 	value="Server"/>
-    <property name="serverAddress"      value="localhost"/>
+	<property name="package"        value="rummikub"/>
+    <property name="client.name" 	value="Client"/>
+    <property name="server.name" 	value="Server"/>
+    <property name="server.Address" value="localhost"/>
     
 	
     <!--**************************************************************-->
@@ -25,25 +25,21 @@
     <target name="both" 	depends="javadoc, client_jar, server_jar" />
     <target name="client" 	depends="client_jar"/>
     <target name="server" 	depends="server_jar"/>
-		
     
     <!-- Client Build -->
     <target name="client_class">
         <mkdir dir="${bin}"/>
-        <javac includeantruntime="false" source="1.6" target="1.6" 
-                srcdir="${src}" destdir="${bin}"
-                debug="true" debuglevel="lines,vars,source">
-        </javac>
+        <javac includeantruntime="false" source="1.6" target="1.6" srcdir="${src}"
+            destdir="${bin}" debug="true" debuglevel="lines,vars,source" />
     </target>
 	
     <target name="client_jar" depends="client_class">
         <mkdir dir="${dist}"/>
-        <jar destfile="${dist}/${client_name}.jar" basedir="${bin}">
+        <jar destfile="${dist}/${client.name}.jar" basedir="${bin}">
+        	<fileset dir="${images}"/>
             <manifest>
-                <attribute name="Main-Class" 
-                           value="${ant.project.name}.${client_name}"/>
+                <attribute name="Main-Class" value="${package}.${client.name}"/>
             </manifest>
-            <fileset dir="${images}"/>
         </jar>
     </target>
 			
@@ -51,18 +47,15 @@
     <!-- Server Build -->
     <target name="server_class">
         <mkdir dir="${bin}"/>
-        <javac includeantruntime="false" source="1.6" target="1.6" 
-                srcdir="${src}" destdir="${bin}"
-                debug="true" debuglevel="lines,vars,source">
-        </javac>
+        <javac includeantruntime="false" source="1.6" target="1.6" srcdir="${src}" 
+        	destdir="${bin}" debug="true" debuglevel="lines,vars,source"/>
     </target>
 	
     <target name="server_jar" depends="server_class">
         <mkdir dir="${dist}"/>
-        <jar destfile="${dist}/${server_name}.jar" basedir="${bin}">
+        <jar destfile="${dist}/${server.name}.jar" basedir="${bin}">
             <manifest>
-                <attribute name="Main-Class" 
-                           value="${ant.project.name}.${server_name}"/>
+                <attribute name="Main-Class" value="${package}.${server.name}"/>
             </manifest>
         </jar>
     </target>
@@ -70,14 +63,14 @@
 
     <!-- Running the programs -->
     <target name="client_run">
-        <java jar="${dist}/${client_name}.jar" fork="true">
-            <arg value="${serverAddress}"/>
+        <java jar="${dist}/${client.name}.jar" fork="true">
+            <arg value="${server.Address}"/>
         </java>
     </target>
    
 	
     <target name="server_run">
-        <java jar="${dist}/${server_name}.jar" fork="true" />
+        <java jar="${dist}/${server.name}.jar" fork="true" />
     </target>
 	
 		
