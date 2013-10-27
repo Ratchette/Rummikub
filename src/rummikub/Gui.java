@@ -7,6 +7,10 @@ import javax.swing.JFrame;
 
 public class Gui extends JFrame implements ActionListener{
 	private Client myClient;
+	private GameInfo myGame;
+	
+	// TESTING
+	private Board myBoard;
 
 	public Gui(String serverIP){
 		myClient = new Client(this, serverIP);
@@ -21,6 +25,11 @@ public class Gui extends JFrame implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
+	}
+	
+	// FIXME
+	public void printBoard(){
+		myBoard.printPool();
 	}
 
 }

@@ -1,6 +1,6 @@
 package rummikub;
 
-public class Tile {
+public class Tile implements Comparable<Tile>{
 	public static final char RED 	= 'r';
 	public static final char ORANGE = 'o';
 	public static final char BLUE 	= 'b';
@@ -57,6 +57,23 @@ public class Tile {
 		
 		this.colour = copy.colour;
 		this.number = copy.number;
+	}
+	
+	/**
+	 * Re-creates a tile that was converted into a string
+	 * @param raw
+	 * 			The string that contains a tile
+	 * 
+	 * NOTE: this function should only be called on strings created using
+	 * 			this classes' toString method
+	 */
+	public Tile(String raw) throws Exception{
+		this.colour = raw.charAt(0);
+		// TODO - make sure that this line works as expected
+		this.number = Integer.parseInt(raw.substring(1));
+		
+		if(!validateTile(this))
+			throw new Exception("[ " + raw + " ] is not a valid tile");
 	}
 
 	
@@ -135,7 +152,7 @@ public class Tile {
 		if(other == null)
 			return false;
 
-		if (!(other instanceof GameInfo)) 
+		if (!(other instanceof Tile)) 
 			return false;
 
 		Tile otherTile = (Tile) other;
@@ -152,12 +169,17 @@ public class Tile {
     // 							Unsorted
     // **********************************************************
 	
+	@Override
+	public int compareTo(Tile other) {
+		return this.number - other.number;
+	}
+	
 	/**
 	 * Returns a list of all of the valid colour codes
 	 * @return
 	 * 			a string where each character is a colour code
 	 */
-	public String getColours(){
+	public static String getColours(){
 		return "" + RED + ORANGE + BLUE + BLACK;
 	}
 }

@@ -3,11 +3,26 @@ package rummikub;
 import java.util.ArrayList;
 
 public class Board {
-	private ArrayList<Set> pool;
+	private Set pool;
 	private ArrayList<Set> melds;
 	
-	public Board(){
-		pool = new ArrayList<Set>();
-		melds = new ArrayList<Set>();
+	public Board() throws Exception{
+		pool = new Set();
+		setMelds(new ArrayList<Set>());
+
 	}
+
+	public ArrayList<Set> getMelds() {
+		return melds;
+	}
+
+	public void setMelds(ArrayList<Set> melds) {
+		this.melds = melds;
+	}
+	
+	// testing 
+	public void printPool(){
+		System.out.println(pool.toString());
+	}
+	
 }

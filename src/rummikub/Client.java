@@ -175,7 +175,7 @@ public class Client extends SwingWorker<Void, String> {
 
 		message = messages.remove(0);
 		
-		// update gui
+		display.printBoard();
 	}
 
 	/**
