@@ -8,8 +8,8 @@ public class GameInfo {
 	public static final int PLAYER4 = 3;
 	
 	private Board board;
-	private boolean myTurn;
-	private boolean doneInitialMeld;
+//	private boolean myTurn;
+//	private boolean doneInitialMeld;
 	
 	private Integer[] handSize;
 	private Set myHand;
@@ -24,7 +24,10 @@ public class GameInfo {
 		}
 	}
 
-
+	public GameInfo() throws Exception{
+		board = new Board();
+		board.printPool();
+	}
 
 	public Board getBoard() {
 		return board;
@@ -34,7 +37,7 @@ public class GameInfo {
 		this.board = board;
 	}
 
-	public void changeTurn(){
-		myTurn = myTurn ? false : true;
-	}
+//	public void changeTurn(){
+//		myTurn = myTurn ? false : true;
+//	}
 }

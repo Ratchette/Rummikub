@@ -32,7 +32,7 @@ public class Tile implements Comparable<Tile>{
 			throw new Exception("Invalid colour [ " + myColour + " ]");
 		if(!validateNumber(myNum))
 			throw new Exception("Invalid number [" + myNum + " ]");
-		if(!validateJoker(myColour, myNum))
+		if(myNum == Tile.JOKER && !validateJoker(myColour, myNum))
 			throw new Exception("Invalid Joker colour [ " + myColour + " ]");
 		
 		this.colour = myColour;
@@ -93,7 +93,7 @@ public class Tile implements Comparable<Tile>{
 	public boolean validateTile(Tile tile){
 		return validateColour(tile.colour) 
 				&& validateNumber(tile.number)
-				&& validateJoker(tile.colour, tile.number);
+				&& (tile.number == Tile.JOKER) ? validateJoker(tile.colour, tile.number) : true;
 	}
 	
 	/**

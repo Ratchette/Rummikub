@@ -26,10 +26,5 @@ public class Gui extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
 	}
-	
-	// FIXME
-	public void printBoard(){
-		myBoard.printPool();
-	}
 
 }

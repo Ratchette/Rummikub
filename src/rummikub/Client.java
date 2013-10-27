@@ -174,8 +174,6 @@ public class Client extends SwingWorker<Void, String> {
 		String message;
 
 		message = messages.remove(0);
-		
-		display.printBoard();
 	}
 
 	/**

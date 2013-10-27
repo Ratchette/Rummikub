@@ -9,7 +9,6 @@ public class Board {
 	public Board() throws Exception{
 		pool = new Set();
 		setMelds(new ArrayList<Set>());
-
 	}
 
 	public ArrayList<Set> getMelds() {

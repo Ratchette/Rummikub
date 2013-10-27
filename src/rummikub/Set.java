@@ -20,8 +20,10 @@ public class Set {
 		tiles = new ArrayList<Tile>();
 		
 		for(int i=0; i<13; i++){
-			for(char colour : Tile.getColours().toCharArray())
-				tiles.add(new Tile(colour, i));
+			for(char colour : Tile.getColours().toCharArray()){
+				tiles.add(new Tile(colour, i+1));
+				tiles.add(new Tile(colour, i+1));
+			}
 		}
 		
 		// TODO implement jokers

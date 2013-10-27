@@ -39,7 +39,7 @@ public class Server extends Thread{
     private PrintWriter[] outbox;	// messages from server to client
     private BufferedReader[] inbox;	// messages from client to server
     
-    private Board board;
+    private GameInfo game;
     private ArrayList<Tile> pool;
     private ArrayList<Set>[] hand;
     
@@ -60,7 +60,7 @@ public class Server extends Thread{
         inbox =  new BufferedReader[numPlayers];
         outbox = new PrintWriter[numPlayers];
         
-    	board = null;
+    	game = null;
     	pool = null;
     	hand = null;
     	
@@ -105,11 +105,6 @@ public class Server extends Thread{
 
                 printStatus("Accept client " + Integer.toString(i+1));
             }
-            
-            // Tell whoever is player one that it is their turn to make a move
-            currentTurn = GameInfo.PLAYER1;
-            outbox[currentTurn].println("Your Turn");
-            printStatus("Sent \"Your Turn\" to [ Client 1 ]");
         }
         
         catch(Exception e){
@@ -145,6 +140,20 @@ public class Server extends Thread{
 	        			+ " ] disconnected before I could terminate connection");
 	        }
         }
+    }
+    
+    private void startGame(){
+    	try{
+	    	this.game = new GameInfo();
+	    	
+	    	currentTurn = GameInfo.PLAYER1;
+	        outbox[currentTurn].println("Your Turn");
+	        printStatus("Sent \"Your Turn\" to [ Client 1 ]");
+    	}
+    	catch(Exception e){
+    		System.out.println(e.getMessage());
+    		e.printStackTrace();
+    	}
     }
     
     /**
@@ -235,6 +244,8 @@ public class Server extends Thread{
         int decodedMessage;
         
         acceptClients();
+        startGame();
+        
         while(currentTurn != GameInfo.GAMEOVER){
             try{
             	
