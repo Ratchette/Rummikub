@@ -1,4 +1,4 @@
-<project name="Rummikub" basedir="." default="both" >
+<project name="Rummikub" basedir="." default="run" >
 	
     <description>
         The buildfile rummikub
@@ -15,14 +15,15 @@
 	<property name="package"        value="rummikub"/>
     <property name="client.name" 	value="Client"/>
     <property name="server.name" 	value="Server"/>
+	
     <property name="server.Address" value="localhost"/>
-    
+    <property name="num.players"     value="2"/>
 	
     <!--**************************************************************-->
     <!--*************** DONT TOUCH BELLOW THIS LINE ******************-->
     <!--**************************************************************-->
 
-    <target name="both" 	depends="javadoc, client_jar, server_jar" />
+    <target name="all" 	    depends="javadoc, client_jar, server_jar, game_jar" />
     <target name="client" 	depends="client_jar"/>
     <target name="server" 	depends="server_jar"/>
     
@@ -59,6 +60,23 @@
             </manifest>
         </jar>
     </target>
+	
+	
+	<!-- Game Build -->
+    <target name="game_class">
+        <mkdir dir="${bin}"/>
+        <javac includeantruntime="false" source="1.6" target="1.6" srcdir="${src}" 
+            destdir="${bin}" debug="true" debuglevel="lines,vars,source"/>
+    </target>
+    
+    <target name="game_jar" depends="game_class">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/${ant.project.name}.jar" basedir="${bin}">
+            <manifest>
+                <attribute name="Main-Class" value="${package}.${ant.project.name}"/>
+            </manifest>
+        </jar>
+    </target>
 
 
     <!-- Running the programs -->
@@ -71,6 +89,13 @@
 	
     <target name="server_run">
         <java jar="${dist}/${server.name}.jar" fork="true" />
+    </target>
+	
+	
+	<target name="run">
+        <java jar="${dist}/${ant.project.name}.jar" fork="true" >
+        	<arg value="${num.players}"/>
+        </java>
     </target>
 	
 		
