@@ -40,8 +40,7 @@ public class Server extends Thread{
     private BufferedReader[] inbox;	// messages from client to server
     
     private GameInfo game;
-    private ArrayList<Tile> pool;
-    private ArrayList<Set>[] hand;
+    private Hand[] hands;
     
     private int currentTurn;
     
@@ -61,8 +60,7 @@ public class Server extends Thread{
         outbox = new PrintWriter[numPlayers];
         
     	game = null;
-    	pool = null;
-    	hand = null;
+    	hands = null;
     	
     	currentTurn = GameInfo.GAMEOVER;
     	
@@ -141,20 +139,7 @@ public class Server extends Thread{
 	        }
         }
     }
-    
-    private void startGame(){
-    	try{
-	    	this.game = new GameInfo();
-	    	
-	    	currentTurn = GameInfo.PLAYER1;
-	        outbox[currentTurn].println("Your Turn");
-	        printStatus("Sent \"Your Turn\" to [ Client 1 ]");
-    	}
-    	catch(Exception e){
-    		System.out.println(e.getMessage());
-    		e.printStackTrace();
-    	}
-    }
+   
     
     /**
      * Interprets the message sent from a client. If the move was valid, record it.
@@ -272,5 +257,28 @@ public class Server extends Thread{
         
         printStatus("Game Over! [ Client " + GameInfo.getPlayer(currentTurn) + " ] wins");
         this.disconnectClients();
+    }
+    
+    private void startGame(){
+    	try{
+	    	this.game = new GameInfo();
+	    	this.hands = new Hand[clientSocket.length];
+	    	
+	    	for(int i=0; i<hands.length; i++){
+	    		hands[i] = new Hand(game.getHand());
+	    		hands[i].sortByColour();
+	    		outbox[i].println(hands[i].toString());
+	    	}
+	    	
+	    	currentTurn = GameInfo.PLAYER1;
+	    	
+//	        outbox[currentTurn].println("go");
+//	        printStatus("Sent \"gon\" to [ Client 1 ]");
+	        
+    	}
+    	catch(Exception e){
+    		System.out.println(e.getMessage());
+    		e.printStackTrace();
+    	}
     }
 }

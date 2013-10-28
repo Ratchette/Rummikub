@@ -172,8 +172,9 @@ public class Client extends SwingWorker<Void, String> {
 	@Override
 	protected void process(java.util.List<String> messages) {
 		String message;
-
+		
 		message = messages.remove(0);
+		display.updateGui(message);		
 	}
 
 	/**

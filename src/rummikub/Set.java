@@ -6,32 +6,11 @@ import java.util.Collections;
 public class Set {
 	private ArrayList<Tile> tiles;
 	private boolean run;
+	private boolean group;
 	
 	// **********************************************************
     // 						Constructors
     // **********************************************************
-	
-	/**
-	 * Create a shuffled deck of tiles 
-	 * @throws Exception
-	 * 				If the tile that we are trying to create is invalid
-	 */
-	public Set() throws Exception{
-		tiles = new ArrayList<Tile>();
-		
-		for(int i=0; i<13; i++){
-			for(char colour : Tile.getColours().toCharArray()){
-				tiles.add(new Tile(colour, i+1));
-				tiles.add(new Tile(colour, i+1));
-			}
-		}
-		
-		// TODO implement jokers
-//		tiles.add(new Tile(Tile.RED,   Tile.JOKER));
-//		tiles.add(new Tile(Tile.BLACK, Tile.JOKER));
-		
-		Collections.shuffle(tiles);
-	}
 	
 	/**
 	 * Generate a run or 
@@ -46,6 +25,7 @@ public class Set {
 		
 		this.tiles = new ArrayList<Tile>(tiles);
 		this.run = validateRun(tiles);
+		this.group = validateGroup(tiles);
 	}
 	
 	/**
@@ -55,10 +35,10 @@ public class Set {
 	 */
 	public Set(Set copy){
 		this.run = copy.isRun();
+		this.group = copy.isGroup();
 		this.tiles = copy.getTiles();
 	}
 
-	// TODO test this method
 	/**
 	 * Re-creates a set that was converted into a string
 	 * @param raw
@@ -246,7 +226,7 @@ public class Set {
 		
 		numTiles = tiles.size();
 		for(int i=0; i<numTiles; i++){
-			currentTile = tiles.remove(i);
+			currentTile = tiles.remove(0);
 			
 			if(currentTile.colour == Tile.RED)
 				colouredSets.get(0).add(currentTile);
@@ -311,4 +291,6 @@ public class Set {
 		
 		return sum;
 	}
+	
+	
 }

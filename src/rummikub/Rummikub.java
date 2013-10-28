@@ -10,7 +10,10 @@ public class Rummikub {
 		
 		(new Server(numPlayers)).start();
 		Gui player1 = new Gui("localhost");
+		player1.setVisible(true);
+		
 		Gui player2 = new Gui("localhost");
+		player2.setVisible(true);
 	}
 	
 	public static int parseArguments(String[] args){

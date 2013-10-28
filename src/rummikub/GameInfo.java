@@ -1,5 +1,7 @@
 package rummikub;
 
+import java.util.ArrayList;
+
 public class GameInfo {
 	public static final int GAMEOVER = -1;
 	public static final int PLAYER1 = 0;
@@ -7,12 +9,15 @@ public class GameInfo {
 	public static final int PLAYER3 = 2;
 	public static final int PLAYER4 = 3;
 	
-	private Board board;
-//	private boolean myTurn;
-//	private boolean doneInitialMeld;
+	public static final int HAND_SIZE = 14;
 	
-	private Integer[] handSize;
-	private Set myHand;
+	private ArrayList<Set> board;
+	private Pool pool;
+
+	private Hand myHand;
+	private int turn;
+	
+//	private Integer[] handSize;
 	
 	public static int getPlayer(int playerIndex){
 		switch(playerIndex){
@@ -25,19 +30,18 @@ public class GameInfo {
 	}
 
 	public GameInfo() throws Exception{
-		board = new Board();
-		board.printPool();
+		pool = new Pool();
+		System.out.println(pool.toString());
 	}
 
-	public Board getBoard() {
-		return board;
+	public ArrayList<Tile> getHand(){
+		ArrayList<Tile> hand = new ArrayList<Tile>();
+		
+		for(int i=0; i<HAND_SIZE; i++)
+			hand.add(pool.pickupTile()); 
+			
+		return hand;
 	}
-
-	public void setBoard(Board board) {
-		this.board = board;
-	}
-
-//	public void changeTurn(){
-//		myTurn = myTurn ? false : true;
-//	}
+	
+	
 }
