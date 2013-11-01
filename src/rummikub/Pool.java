@@ -12,7 +12,7 @@ public class Pool {
 	 * 				If a tile that we are trying to create is invalid (internal error)
 	 */
 	public Pool() throws Exception{
-		tiles = new Set();
+		tiles = new Set(false);
 	}
 	
 	/**

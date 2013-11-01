@@ -11,12 +11,23 @@ public class Set {
     // **********************************************************
 	
 	/**
+	 * Creates an empty set
+	 */
+	public Set(){
+		tiles = new ArrayList<Tile>();
+	}
+	
+	/**
 	 * Create a shuffled deck of tiles 
+	 * 
+	 * @param includeJokers
+	 * 			true = will generate a deck with jokers
+	 * 			false = will generate a deck WITHOUT jokers
 	 * 
 	 * @throws Exception
 	 * 				If the tile that we are trying to create is invalid (internal error)
 	 */
-	public Set() throws Exception{
+	public Set(Boolean includeJokers) throws Exception{
 		tiles = new ArrayList<Tile>();
 		
 		for(int i=0; i<13; i++){
@@ -27,8 +38,10 @@ public class Set {
 		}
 		
 		// TODO implement jokers
-//		tiles.add(new Tile(Tile.RED,   Tile.JOKER));
-//		tiles.add(new Tile(Tile.BLACK, Tile.JOKER));
+		if(includeJokers){
+			tiles.add(new Tile(Tile.RED,   Tile.JOKER));
+			tiles.add(new Tile(Tile.BLACK, Tile.JOKER));
+		}
 		
 		Collections.shuffle(tiles);
 	}
@@ -112,6 +125,10 @@ public class Set {
 		this.tiles = tiles;
 	}
 	
+	public void addTile(Tile tile) throws Exception{
+		tiles.add(new Tile(tile));
+	}
+	
 	public int getNumTiles(){
 		return tiles.size();
 	}
@@ -122,49 +139,86 @@ public class Set {
 	
 	/**
 	 * Sorts the tiles by number
-	 * @param tiles
-	 * 			The array of tiles that you wish to sort
 	 */
-	public void sortByNumber(ArrayList<Tile> tiles){
+	public void sortByNumber(){
 		Collections.sort(tiles);
 	}
 	
 	
 	/**
 	 * Sorts the tiles by colour first, then number
-	 * @param tiles
-	 * 			The array of tiles that you wish to sort
 	 * 
 	 * NOTE: this function is a bit shoddy and should be rewritten
 	 */
-	public void sortByColour(){
-		ArrayList<ArrayList<Tile>> colouredSets = new ArrayList<ArrayList<Tile>>(4); 
-		int numTiles;
+	public void sortByColour() throws Exception{
+		ArrayList<Set> colouredSets = new ArrayList<Set>(4); 
 		Tile currentTile;
+		int numTiles;
 		
 		for(int i=0; i<4; i++)
-			colouredSets.add(new ArrayList<Tile>());
+			colouredSets.add(new Set());
 		
 		numTiles = tiles.size();
 		for(int i=0; i<numTiles; i++){
 			currentTile = tiles.remove(0);
 			
 			if(currentTile.colour == Tile.RED)
-				colouredSets.get(0).add(currentTile);
+				colouredSets.get(0).addTile(currentTile);
 			else if(currentTile.colour == Tile.ORANGE)
-				colouredSets.get(1).add(currentTile);
+				colouredSets.get(1).addTile(currentTile);
 			else if(currentTile.colour == Tile.BLUE)
-				colouredSets.get(2).add(currentTile);
+				colouredSets.get(2).addTile(currentTile);
 			else
-				colouredSets.get(3).add(currentTile);
+				colouredSets.get(3).addTile(currentTile);
 		}
 		
 		
 		for(int i=0; i<4; i++){
-			sortByNumber(colouredSets.get(i));
-			tiles.addAll(colouredSets.get(i));
+			colouredSets.get(i).sortByNumber();
+			tiles.addAll(colouredSets.get(i).getTiles());
 		}
 	}
+	
+	
+	// **********************************************************
+    //						Runs and Groups
+    // **********************************************************
+
+	public ArrayList<Set> getGroups() throws Exception{
+		ArrayList<Set> groups;
+		// FIXME this is breaking the set encapsulation!!!
+		ArrayList<Tile> tile_set;
+		
+		System.out.println(tiles.toString());
+		
+		groups = new ArrayList<Set>(15);
+		for(int i=0; i<14; i++)
+			groups.add(new Set());
+		
+		for(Tile tile : tiles)
+			groups.get(tile.number).addTile(tile);
+		
+		for(int i=1; i<15; i++){
+			if(groups.get(i).getNumTiles() < 3)
+				continue;
+			
+			System.out.println("At index " + i + " the tiles are " +  tiles.toString());
+			
+			tile_set = groups.get(i).getTiles();
+			for(int j=0; j<tile_set.size(); j++)
+				for(int k=j+1; k<tile_set.size(); k++)
+					if(tile_set.get(j).colour == tile_set.get(k).colour){
+						tile_set.remove(k);
+						k = k -1; // to compensate for the fact we shifted everything after k down one index
+					}
+			if(tile_set.size() < 3)
+				continue;
+			
+			groups.add(new Set(tile_set));
+		}
+		return groups;
+	}
+	
 	
 	// **********************************************************
     //							Common							
