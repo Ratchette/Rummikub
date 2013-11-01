@@ -63,9 +63,9 @@ public class Gui extends JFrame implements ActionListener{
         
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		myClient = new Client(this, serverIP);
-		myClient.connect(serverIP);
-		myClient.execute();
+//		myClient = new Client(this, serverIP);
+//		myClient.connect(serverIP);
+//		myClient.execute();
 	}
 	
 	public void updateGui(String message){

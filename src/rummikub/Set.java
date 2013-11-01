@@ -5,8 +5,6 @@ import java.util.Collections;
 
 public class Set {
 	private ArrayList<Tile> tiles;
-	private boolean run;
-	private boolean group;
 	
 	// **********************************************************
     // 						Constructors
@@ -20,12 +18,7 @@ public class Set {
 	 * 			If the array of tiles do not form valid run or group
 	 */
 	public Set(ArrayList<Tile> tiles) throws Exception{
-		if(!validateSet(tiles))
-			throw new Exception("The tiles do not form a valid set");
-		
 		this.tiles = new ArrayList<Tile>(tiles);
-		this.run = validateRun(tiles);
-		this.group = validateGroup(tiles);
 	}
 	
 	/**
@@ -34,8 +27,6 @@ public class Set {
 	 * 			the set that you wish to duplicate
 	 */
 	public Set(Set copy){
-		this.run = copy.isRun();
-		this.group = copy.isGroup();
 		this.tiles = copy.getTiles();
 	}
 
@@ -59,11 +50,7 @@ public class Set {
 			if(tile.trim().length() > 0)
 				parsedTiles.add(new Tile(tile));
 		
-		if(!validateSet(tiles))
-			throw new Exception("The tiles do not form a valid set");
-		
 		this.tiles = new ArrayList<Tile>(tiles);
-		this.run = validateRun(tiles);
 	}
 	
 	// **********************************************************
@@ -79,77 +66,6 @@ public class Set {
 	 * 			false otherwise 
 	 */
 	boolean validateSet(ArrayList<Tile> tiles){
-//		if(tiles.size() < 3)
-//			return false;
-//		
-//		return validateRun(tiles) || validateGroup(tiles);
-		return true;
-	}
-	
-	/**
-	 * Determine if the tiles form a run
-	 * @param tiles
-	 * 			The set of tiles that you wish to check
-	 * @return
-	 * 			true if the tiles form a run </br>
-	 * 			false otherwise
-	 */
-	boolean validateRun(ArrayList<Tile> tiles){
-		Tile currentTile;
-		char runColour;
-		int previousNum;
-		
-		sortByNumber(tiles);
-		runColour = tiles.get(0).colour;
-		previousNum = tiles.get(0).number;
-		
-		for(int i=1; i<tiles.size(); i++){
-			currentTile = tiles.get(i);
-			
-			if(currentTile.colour != runColour)
-				return false;
-			
-			if(currentTile.number == previousNum + 1)
-				previousNum++;
-			else
-				return false;
-		}
-		
-		return true;
-	}
-	
-	/**
-	 * Determine if the tiles form a group
-	 * @param tiles
-	 * 			The set of tiles that you wish to check
-	 * @return
-	 * 			true if the tiles form a group </br>
-	 * 			false otherwise
-	 */
-	boolean validateGroup(ArrayList<Tile> tiles){
-		Tile currentTile;
-		ArrayList<Character> usedColours;
-		int groupNumber;
-		
-		if(tiles.size() > 4)
-			return false;
-		
-		groupNumber = tiles.get(0).number;
-		usedColours = new ArrayList<Character>();
-		usedColours.add(tiles.get(0).colour);
-		
-		for(int i=1; i<tiles.size(); i++){
-			currentTile = tiles.get(i);
-			
-			if(currentTile.number != groupNumber)
-				return false;
-			
-			if(usedColours.contains(currentTile.colour))
-				return false;
-			
-			usedColours.add(currentTile.colour);
-		}
-		
 		return true;
 	}
 	
@@ -157,27 +73,6 @@ public class Set {
 	// **********************************************************
     // 					Getters and Setters
     // **********************************************************
-	
-	/**
-	 * Check if the set is a group
-	 * @return
-	 * 			true if the set is a group </br>
-	 * 			false otherwise
-	 */
-	boolean isGroup(){
-		return !this.run;
-	}
-	
-	/**
-	 * Check if the set is a run
-	 * @return
-	 * 			true if the set is a run </br>
-	 * 			false otherwise
-	 */
-	boolean isRun(){
-		return this.run;
-	}
-
 	
 	/**
 	 * Getter for the tiles array
@@ -260,8 +155,7 @@ public class Set {
 			return false;
 
 		Set otherTile = (Set) other;
-		return this.getTiles() == otherTile.getTiles()
-				&& this.isRun() == otherTile.isRun();
+		return this.getTiles() == otherTile.getTiles();
 	}
 	
 	// TODO Test this function
@@ -291,7 +185,5 @@ public class Set {
 		}
 		
 		return sum;
-	}
-	
-	
+	}	
 }
