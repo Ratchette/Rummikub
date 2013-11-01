@@ -1,52 +1,68 @@
 package rummikub;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
-public class Pool{
-	ArrayList<Tile> tiles; 
+public class Pool {
+	Set tiles;
 	
 	/**
-	 * Create a shuffled deck of tiles 
+	 * Create a shuffled pool of tiles 
+	 * 
 	 * @throws Exception
-	 * 				If the tile that we are trying to create is invalid
+	 * 				If a tile that we are trying to create is invalid (internal error)
 	 */
 	public Pool() throws Exception{
-		tiles = new ArrayList<Tile>();
-		
-		for(int i=0; i<13; i++){
-			for(char colour : Tile.getColours().toCharArray()){
-				tiles.add(new Tile(colour, i+1));
-				tiles.add(new Tile(colour, i+1));
-			}
-		}
-		
-		// TODO implement jokers
-//		tiles.add(new Tile(Tile.RED,   Tile.JOKER));
-//		tiles.add(new Tile(Tile.BLACK, Tile.JOKER));
-		
-		Collections.shuffle(tiles);
+		tiles = new Set();
 	}
 	
+	/**
+	 * Get the number of tiles that remain int the pool
+	 * @return The number of tiles that remain in the pool
+	 */
 	public int remainingTiles(){
-		return tiles.size();
+		return tiles.getNumTiles();
 	}
 	
-	public Tile pickupTile(){
+	/**
+	 * Retrieves one hand from the top of the randomized deck
+	 * @return an array of 14 tiles 
+	 */
+	public ArrayList<Tile> getHand(){
+		ArrayList<Tile> hand = new ArrayList<Tile>();
+		
+		for(int i=0; i<GameInfo.HAND_SIZE; i++)
+			hand.add(this.drawTile()); 
+			
+		return hand;
+	}
+	
+	/**
+	 * Draws one tile from the front of the deck
+	 * @return one random Tile
+	 */
+	public Tile drawTile(){
+		ArrayList<Tile> tempPool;
+		Tile next_tile;
+		
 		if(remainingTiles() == 0)
 			return null;
 		
-		return tiles.remove(0);
+		tempPool = tiles.getTiles();
+		next_tile = tempPool.remove(0);
+		tiles.setTiles(tempPool);
+		
+		return next_tile;
 	}
 	
-	// TODO Test this function
 	@Override
 	public String toString(){
+		ArrayList<Tile> pool; 
 		String encoding = "";
 		
+		pool = tiles.getTiles();
 		encoding = encoding + "( ";
-		for(int i=0; i<tiles.size(); i++)
-			encoding = encoding + tiles.get(i).toString() + " ";
+		for(int i=0; i<pool.size();i++)
+			encoding = encoding + pool.get(i).toString() + " ";
 		encoding = encoding + ")";
 		
 		return encoding;

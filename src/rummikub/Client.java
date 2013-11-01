@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -27,6 +28,7 @@ public class Client extends Thread{
 	private BufferedReader inbox;
 	private PrintWriter outbox;
 
+	private Set hand;
 	private int playerNum;	// discover if you are player 1 through 4 (for display purposes only)
 
 	// **********************************************************
@@ -133,13 +135,19 @@ public class Client extends Thread{
 	@Override
 	public void run() {
 		String message;
-		this.connect("localhost");
+		
+		connect("localhost");
 
 		try {
+			startGame();
+			
 			while (true) {
+				// the server will send you the current state of the board and the number of cards in each players hand before it is your turn
+				// YOU are responsible for checking if a player has won and disconnecting on your own!
+				
 				message = inbox.readLine();
-				printStatus("Receive message: " + message);
-				// send something back to the server?
+				printStatus("Received message: " + message);
+				drawTile();
 			}
 		}
 
@@ -150,6 +158,34 @@ public class Client extends Thread{
 		this.done();
 	}
 
+	private void startGame() throws Exception{
+		String encodedHand;
+		
+		try{
+			encodedHand = inbox.readLine();
+			printStatus("Received message: " + encodedHand);
+			hand = new Set(encodedHand);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	private void drawTile() throws Exception{
+		String encodedTile;
+		ArrayList<Tile> newHand;
+		
+		outbox.println("draw");
+		encodedTile = inbox.readLine();
+		printStatus("My new tile is: " + encodedTile);
+		
+		newHand = hand.getTiles();
+		newHand.add(new Tile(encodedTile));
+		hand.setTiles(newHand);
+		hand.sortByColour();
+		
+		printStatus("My new hand is: " + hand.toString());
+	}
+	
 	/**
 	 * Closes the sockets and the streams before exiting the thread
 	 */
@@ -164,6 +200,7 @@ public class Client extends Thread{
 			printStatus("Disconnected from the server");
 		}
 	}
+	
 	
 	public static void main(String[] args){
 		(new Client()).start();

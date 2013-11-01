@@ -37,8 +37,8 @@ public class Server extends Thread{
     private PrintWriter[] outbox;	// messages from server to client
     private BufferedReader[] inbox;	// messages from client to server
     
-    private GameInfo game;
-    private Hand[] hands;
+    private Pool pool;
+    private Set[] hands;
     
     private int currentTurn;
     
@@ -57,7 +57,7 @@ public class Server extends Thread{
         inbox =  new BufferedReader[numPlayers];
         outbox = new PrintWriter[numPlayers];
         
-    	game = null;
+    	pool = null;
     	hands = null;
     	
     	currentTurn = GameInfo.GAMEOVER;
@@ -223,23 +223,24 @@ public class Server extends Thread{
     
     @Override
     public void run(){
-        int decodedMessage;
-        
+        String message;
+    	
         acceptClients();
         startGame();
         
         while(currentTurn != GameInfo.GAMEOVER){
             try{
+            	outbox[currentTurn].println("Current state of game");
+    	        printStatus("Sent \"Current state of game\" to [ Client "+ (currentTurn + 1) +" ]");
             	
-            	
-            	// wait for the next player to send me a move
-                decodedMessage = decodeMessage(inbox[currentTurn].readLine());
+                message = inbox[currentTurn].readLine();
                 
                 // TODO interpret the move
-                
                 // TODO respond back to the client
-                
-                currentTurn = (currentTurn + 1) % clientSocket.length;
+                if(message.equalsIgnoreCase("draw"));
+                	outbox[currentTurn].println(pool.drawTile().toString());
+ 
+                currentTurn = (currentTurn + 1); // % clientSocket.length;
                 printStatus("It is now client " + GameInfo.getPlayer(currentTurn) + "'s turn");
             }
             
@@ -256,20 +257,16 @@ public class Server extends Thread{
     
     private void startGame(){
     	try{
-	    	this.game = new GameInfo();
-	    	this.hands = new Hand[clientSocket.length];
+	    	this.pool = new Pool();
+	    	this.hands = new Set[clientSocket.length];
 	    	
 	    	for(int i=0; i<hands.length; i++){
-	    		hands[i] = new Hand(game.getHand());
+	    		hands[i] = new Set(pool.getHand());
 	    		hands[i].sortByColour();
 	    		outbox[i].println(hands[i].toString());
 	    	}
 	    	
 	    	currentTurn = GameInfo.PLAYER1;
-	    	
-	        outbox[currentTurn].println("go");
-	        printStatus("Sent \"go\" to [ Client 1 ]");
-	        
     	}
     	catch(Exception e){
     		System.out.println(e.getMessage());

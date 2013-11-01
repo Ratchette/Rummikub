@@ -33,15 +33,4 @@ public class GameInfo {
 		pool = new Pool();
 		System.out.println(pool.toString());
 	}
-
-	public ArrayList<Tile> getHand(){
-		ArrayList<Tile> hand = new ArrayList<Tile>();
-		
-		for(int i=0; i<HAND_SIZE; i++)
-			hand.add(pool.pickupTile()); 
-			
-		return hand;
-	}
-	
-	
 }

@@ -11,6 +11,29 @@ public class Set {
     // **********************************************************
 	
 	/**
+	 * Create a shuffled deck of tiles 
+	 * 
+	 * @throws Exception
+	 * 				If the tile that we are trying to create is invalid (internal error)
+	 */
+	public Set() throws Exception{
+		tiles = new ArrayList<Tile>();
+		
+		for(int i=0; i<13; i++){
+			for(char colour : Tile.getColours().toCharArray()){
+				tiles.add(new Tile(colour, i+1));
+				tiles.add(new Tile(colour, i+1));
+			}
+		}
+		
+		// TODO implement jokers
+//		tiles.add(new Tile(Tile.RED,   Tile.JOKER));
+//		tiles.add(new Tile(Tile.BLACK, Tile.JOKER));
+		
+		Collections.shuffle(tiles);
+	}
+	
+	/**
 	 * Generate a run or 
 	 * @param tiles
 	 * 			the set that you wish to duplicate
@@ -38,19 +61,17 @@ public class Set {
 	 * NOTE: this function should only be called on strings created using
 	 * 			this classes' toString method
 	 */
+	// TODO Test this funciton
 	public Set(String raw) throws Exception{
-		ArrayList<Tile> parsedTiles;
 		String[] tokens;
 		
-		parsedTiles = new ArrayList<Tile>();
+		tiles = new ArrayList<Tile>();
 		// TODO Make this regex better
 		tokens = raw.split("\\s+|\\[|\\]");
 		
 		for(String tile : tokens)
 			if(tile.trim().length() > 0)
-				parsedTiles.add(new Tile(tile));
-		
-		this.tiles = new ArrayList<Tile>(tiles);
+				tiles.add(new Tile(tile));
 	}
 	
 	// **********************************************************
@@ -91,6 +112,10 @@ public class Set {
 		this.tiles = tiles;
 	}
 	
+	public int getNumTiles(){
+		return tiles.size();
+	}
+	
 	// **********************************************************
     //							Sorting							
     // **********************************************************
@@ -112,7 +137,7 @@ public class Set {
 	 * 
 	 * NOTE: this function is a bit shoddy and should be rewritten
 	 */
-	public void sortByColour(ArrayList<Tile> tiles){
+	public void sortByColour(){
 		ArrayList<ArrayList<Tile>> colouredSets = new ArrayList<ArrayList<Tile>>(4); 
 		int numTiles;
 		Tile currentTile;
@@ -158,7 +183,6 @@ public class Set {
 		return this.getTiles() == otherTile.getTiles();
 	}
 	
-	// TODO Test this function
 	@Override
 	public String toString(){
 		String encoding = "";
