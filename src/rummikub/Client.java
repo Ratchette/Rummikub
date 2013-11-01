@@ -153,6 +153,7 @@ public class Client extends SwingWorker<Void, String> {
 				message = inbox.readLine();
 				printStatus("Recieved message: " + message);
 				publish(message);
+//				outbox.println("I got the message ");
 			}
 		}
 

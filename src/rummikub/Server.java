@@ -241,10 +241,8 @@ public class Server extends Thread{
                 // TODO interpret the move
                 
                 // TODO respond back to the client
-                //sendMessages(decodedMessage);
                 
                 currentTurn = (currentTurn + 1) % clientSocket.length;
-                outbox[currentTurn].println(decodedMessage);
                 printStatus("It is now client " + GameInfo.getPlayer(currentTurn) + "'s turn");
             }
             
@@ -272,8 +270,8 @@ public class Server extends Thread{
 	    	
 	    	currentTurn = GameInfo.PLAYER1;
 	    	
-//	        outbox[currentTurn].println("go");
-//	        printStatus("Sent \"gon\" to [ Client 1 ]");
+	        outbox[currentTurn].println("go");
+	        printStatus("Sent \"go\" to [ Client 1 ]");
 	        
     	}
     	catch(Exception e){

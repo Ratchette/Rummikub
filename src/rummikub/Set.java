@@ -79,10 +79,11 @@ public class Set {
 	 * 			false otherwise 
 	 */
 	boolean validateSet(ArrayList<Tile> tiles){
-		if(tiles.size() < 3)
-			return false;
-		
-		return validateRun(tiles) || validateGroup(tiles);
+//		if(tiles.size() < 3)
+//			return false;
+//		
+//		return validateRun(tiles) || validateGroup(tiles);
+		return true;
 	}
 	
 	/**
