@@ -151,7 +151,17 @@ public class Set {
 	 * NOTE: this function is a bit shoddy and should be rewritten
 	 */
 	public void sortByColour() throws Exception{
-		ArrayList<Set> colouredSets = new ArrayList<Set>(4); 
+		ArrayList<Set> colouredSets;
+		colouredSets = separateByColour();
+		
+		for(int i=0; i<4; i++){
+			colouredSets.get(i).sortByNumber();
+			tiles.addAll(colouredSets.get(i).getTiles());
+		}
+	}
+	
+	private ArrayList<Set> separateByColour() throws Exception{
+		ArrayList<Set> colouredSets = new ArrayList<Set>();
 		Tile currentTile;
 		int numTiles;
 		
@@ -172,11 +182,7 @@ public class Set {
 				colouredSets.get(3).addTile(currentTile);
 		}
 		
-		
-		for(int i=0; i<4; i++){
-			colouredSets.get(i).sortByNumber();
-			tiles.addAll(colouredSets.get(i).getTiles());
-		}
+		return colouredSets;
 	}
 	
 	
@@ -190,13 +196,12 @@ public class Set {
 		// FIXME this is breaking the set encapsulation!!!
 		ArrayList<Tile> tile_set;
 		
-		// create data structures to store the groups
+		sortByNumber();
 		groups = new ArrayList<Set>();
 		tilesByNumber = new ArrayList<Set>();
 		for(int i=0; i<Tile.JOKER; i++)
 			tilesByNumber.add(new Set());
 		
-		// sort the tiles into groups by number
 		for(int i=0; i<tiles.size(); i++)
 			tilesByNumber.get(tiles.get(i).number).addTile(tiles.get(i));
 		
@@ -217,13 +222,13 @@ public class Set {
 			else if(tile_set.size() == 3)
 				groups.add(new Set(tile_set));
 			else 
-				groups.addAll(getSubGroups(tile_set));
+				groups.addAll(separateSubGroups(tile_set));
 		}
 		
 		return groups;
 	}
 	
-	private ArrayList<Set> getSubGroups(ArrayList<Tile> tiles) throws Exception{
+	private ArrayList<Set> separateSubGroups(ArrayList<Tile> tiles) throws Exception{
 		ArrayList<Set> groups;
 		ArrayList<Tile> temp_tiles;
 		
@@ -237,6 +242,55 @@ public class Set {
 		return groups;
 	}
 	
+	public ArrayList<Set> getRuns() throws Exception{
+		ArrayList<Set> coloured_sets, runs;
+		ArrayList<Tile> coloured_tiles, temp_set;
+		
+		runs = new ArrayList<Set>();
+		coloured_sets = separateByColour();
+				
+		for(int i=0; i<4; i++){
+			coloured_tiles = coloured_sets.get(i).getTiles();
+			temp_set = new ArrayList<Tile>();	// redundant
+			
+			for(int j=0; j<coloured_tiles.size(); j++){
+				temp_set = new ArrayList<Tile>();
+				temp_set.add(coloured_tiles.get(j));
+				
+				for(int k=j+1; k<coloured_tiles.size(); k++){
+					// if you contain two of the same tile in your hand
+					if(coloured_tiles.get(k-1).number == coloured_tiles.get(k).number)
+						continue;
+					
+					else if(coloured_tiles.get(k-1).number == coloured_tiles.get(k).number -1)
+						temp_set.add(coloured_tiles.get(k));
+					
+					else
+						break;
+				}
+				
+				if(temp_set.size() > 2)
+					runs.addAll(separateSubRuns(temp_set));
+			}
+		}
+		
+		return runs;
+	}
+	
+	
+	private ArrayList<Set> separateSubRuns(ArrayList<Tile> tiles) throws Exception{
+		ArrayList<Set> runs;
+		
+		System.out.println("Started with : " + tiles.toString());
+		
+		runs = new ArrayList<Set>();
+		for(int i=tiles.size()-1; i > 1; i--){
+			runs.add(new Set(tiles));
+			tiles.remove(i);
+		}
+		
+		return runs;
+	}
 	
 	// **********************************************************
     //							Common							

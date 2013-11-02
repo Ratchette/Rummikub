@@ -135,7 +135,7 @@ public class Client extends Thread{
 	@Override
 	public void run() {
 		String message;
-		ArrayList<Set> groups;
+		ArrayList<Set> runs;
 		
 		connect("localhost");
 
@@ -149,10 +149,10 @@ public class Client extends Thread{
 				message = inbox.readLine();
 				printStatus("Received message: " + message);
 				drawTile();
-				groups = hand.getGroups();
+				runs = hand.getRuns();
 				
-				for(int i=0; i<groups.size(); i++)
-					printStatus(groups.get(i).toString());
+				for(int i=0; i<runs.size(); i++)
+					printStatus(runs.get(i).toString());
 			}
 		}
 
@@ -169,7 +169,9 @@ public class Client extends Thread{
 		try{
 			encodedHand = inbox.readLine();
 			printStatus("Received message: " + encodedHand);
-			hand = new Set(encodedHand);
+//			hand = new Set(encodedHand);
+			// FIXME
+			hand = new Set("[ r1 r2 r3 r4 r6 r10 o1 o2 o4 o5 o6 o7 o8 ]");
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -183,8 +185,7 @@ public class Client extends Thread{
 		printStatus("My new tile is: " + encodedTile);
 		
 		hand.addTile(new Tile(encodedTile));
-//		hand.sortByColour();
-		hand.sortByNumber();
+		hand.sortByColour();
 		printStatus("My new hand is: " + hand.toString());
 	}
 	
