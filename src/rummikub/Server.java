@@ -258,6 +258,7 @@ public class Server extends Thread{
     private void startGame(){
     	try{
 	    	this.pool = new Pool();
+	    	printStatus(pool.toString());
 	    	this.hands = new Set[clientSocket.length];
 	    	
 	    	for(int i=0; i<hands.length; i++){

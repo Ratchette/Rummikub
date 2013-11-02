@@ -1,4 +1,4 @@
-<project name="Rummikub" basedir="." default="run" >
+<project name="Rummikub" basedir="." default="all" >
 	
     <description>
         The buildfile rummikub
@@ -26,6 +26,7 @@
     <target name="all" 	    depends="javadoc, client_jar, server_jar, game_jar" />
     <target name="client" 	depends="client_jar"/>
     <target name="server" 	depends="server_jar"/>
+	<target name="game"     depends="game_jar"/>
     
     <!-- Client Build -->
     <target name="client_class">
@@ -80,19 +81,19 @@
 
 
     <!-- Running the programs -->
-    <target name="client_run">
+    <target name="client_run" description="Run the client">
         <java jar="${dist}/${client.name}.jar" fork="true">
             <arg value="${server.Address}"/>
         </java>
     </target>
    
 	
-    <target name="server_run">
+    <target name="server_run" description="Run the server">
         <java jar="${dist}/${server.name}.jar" fork="true" />
     </target>
 	
 	
-	<target name="run">
+	<target name="run" description="Run the demo of the game">
         <java jar="${dist}/${ant.project.name}.jar" fork="true" >
         	<arg value="${num.players}"/>
         </java>
@@ -105,7 +106,7 @@
         <delete dir="${dist}"/>
     </target>
 	    
-    <target name="javadoc">
+    <target name="javadoc" description="Generates Javadocs">
         <delete dir="${docs}"/>
         <javadoc sourcepath="${src}" destdir="${docs}" private="true" use="true" header="true" footer="true" windowtitle="Checkers Documentation"/>
     </target>

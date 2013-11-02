@@ -185,37 +185,55 @@ public class Set {
     // **********************************************************
 
 	public ArrayList<Set> getGroups() throws Exception{
+		ArrayList<Set> tilesByNumber;
 		ArrayList<Set> groups;
 		// FIXME this is breaking the set encapsulation!!!
 		ArrayList<Tile> tile_set;
 		
-		System.out.println(tiles.toString());
+		// create data structures to store the groups
+		groups = new ArrayList<Set>();
+		tilesByNumber = new ArrayList<Set>();
+		for(int i=0; i<Tile.JOKER; i++)
+			tilesByNumber.add(new Set());
 		
-		groups = new ArrayList<Set>(15);
-		for(int i=0; i<14; i++)
-			groups.add(new Set());
+		// sort the tiles into groups by number
+		for(int i=0; i<tiles.size(); i++)
+			tilesByNumber.get(tiles.get(i).number).addTile(tiles.get(i));
 		
-		for(Tile tile : tiles)
-			groups.get(tile.number).addTile(tile);
-		
-		for(int i=1; i<15; i++){
-			if(groups.get(i).getNumTiles() < 3)
+		for(int i=1; i<tilesByNumber.size(); i++){
+			if(tilesByNumber.get(i).getNumTiles() < 3)
 				continue;
 			
-			System.out.println("At index " + i + " the tiles are " +  tiles.toString());
-			
-			tile_set = groups.get(i).getTiles();
+			tile_set = tilesByNumber.get(i).getTiles();
 			for(int j=0; j<tile_set.size(); j++)
 				for(int k=j+1; k<tile_set.size(); k++)
 					if(tile_set.get(j).colour == tile_set.get(k).colour){
 						tile_set.remove(k);
 						k = k -1; // to compensate for the fact we shifted everything after k down one index
 					}
+			
 			if(tile_set.size() < 3)
 				continue;
-			
-			groups.add(new Set(tile_set));
+			else if(tile_set.size() == 3)
+				groups.add(new Set(tile_set));
+			else 
+				groups.addAll(getSubGroups(tile_set));
 		}
+		
+		return groups;
+	}
+	
+	private ArrayList<Set> getSubGroups(ArrayList<Tile> tiles) throws Exception{
+		ArrayList<Set> groups;
+		ArrayList<Tile> temp_tiles;
+		
+		groups = new ArrayList<Set>();
+		for(int i=0; i<tiles.size(); i++){
+			temp_tiles = new ArrayList<Tile>(tiles);
+			temp_tiles.remove(i);
+			groups.add(new Set(temp_tiles));
+		}
+		
 		return groups;
 	}
 	

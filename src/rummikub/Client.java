@@ -150,6 +150,9 @@ public class Client extends Thread{
 				printStatus("Received message: " + message);
 				drawTile();
 				groups = hand.getGroups();
+				
+				for(int i=0; i<groups.size(); i++)
+					printStatus(groups.get(i).toString());
 			}
 		}
 
@@ -180,7 +183,8 @@ public class Client extends Thread{
 		printStatus("My new tile is: " + encodedTile);
 		
 		hand.addTile(new Tile(encodedTile));
-		hand.sortByColour();
+//		hand.sortByColour();
+		hand.sortByNumber();
 		printStatus("My new hand is: " + hand.toString());
 	}
 	
