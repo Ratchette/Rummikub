@@ -28,7 +28,9 @@ public class Client extends Thread{
 	private BufferedReader inbox;
 	private PrintWriter outbox;
 
+	private GameInfo game;
 	private Set hand;
+	private boolean initialMeld;
 	private int playerNum;	// discover if you are player 1 through 4 (for display purposes only)
 
 	// **********************************************************
@@ -129,13 +131,30 @@ public class Client extends Thread{
     // 						Gameplay Methods
     // **********************************************************
 	
+
+	private void startGame() throws Exception{
+		String encodedHand;
+		
+		initialMeld = false;
+		
+		try{
+			encodedHand = inbox.readLine();
+			printStatus("Received message: " + encodedHand);
+			hand = new Set(encodedHand);
+//			hand = new Set("[ o5 o6 o7 o8 o9 b6 x6 ]");
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * The "main" function of the client thread.
 	 */
 	@Override
 	public void run() {
 		String message;
-		ArrayList<Set> runs;
+		ArrayList<Set> play;
 		
 		connect("localhost");
 
@@ -147,46 +166,68 @@ public class Client extends Thread{
 				// YOU are responsible for checking if a player has won and disconnecting on your own!
 				
 				message = inbox.readLine();
-				printStatus("Received message: " + message);
-				drawTile();
-				runs = hand.getRuns();
+				game = new GameInfo(message);
 				
-				for(int i=0; i<runs.size(); i++)
-					printStatus(runs.get(i).toString());
+				System.out.println(game.displayGame());
+				printStatus("Current Hand : " + hand.toString());
+				
+				if(!initialMeld){
+					play = hand.getInitialMeld();
+					
+					if(play != null){
+						game.addMelds(play);
+						game.setHand(playerNum - 1, hand.getNumTiles());
+						initialMeld = true;
+					}
+				}
+				
+				else{
+					play = game.getMove(hand, playerNum - 1);
+					
+					if(play != null)
+						game.setMelds(play);
+				}
+				
+				// there is no play to make
+				if(play == null){
+					printStatus("Could not make a meld");
+					drawTile();
+				}
+				else{
+					playMeld(play);
+				}
 			}
 		}
 
 		catch (Exception e) {
 			printStatus("The server disconnected");
+			e.printStackTrace();
 		}
 		
 		this.done();
 	}
 
-	private void startGame() throws Exception{
-		String encodedHand;
-		
-		try{
-			encodedHand = inbox.readLine();
-			printStatus("Received message: " + encodedHand);
-//			hand = new Set(encodedHand);
-			// FIXME
-			hand = new Set("[ r1 r2 r3 r4 r6 r10 o1 o2 o4 o5 o6 o7 o8 ]");
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
 	
 	private void drawTile() throws Exception{
 		String encodedTile;
 		
 		outbox.println("draw");
 		encodedTile = inbox.readLine();
-		printStatus("My new tile is: " + encodedTile);
 		
 		hand.addTile(new Tile(encodedTile));
 		hand.sortByColour();
 		printStatus("My new hand is: " + hand.toString());
+	}
+	
+	private void playMeld(ArrayList<Set> melds) throws Exception{
+		
+		
+		for(int i=0; i<melds.size(); i++){
+			printStatus("Play: " + melds.get(i).toString());
+			// FIXME - this no longer works!
+//			hand.removeTiles(play.get(i));
+		}
+		outbox.println(game.toString());
 	}
 	
 	/**

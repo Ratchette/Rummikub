@@ -123,10 +123,23 @@ public class Set {
 	 */
 	public void setTiles(ArrayList<Tile> tiles) {
 		this.tiles = tiles;
-	}
+	} 
 	
 	public void addTile(Tile tile) throws Exception{
 		tiles.add(new Tile(tile));
+	}
+	
+	public void removeTiles(Set set) throws Exception{
+		ArrayList<Tile> tilesToRemove;
+		
+		tilesToRemove = set.getTiles();
+		for(Tile tile : tilesToRemove){
+			removeTile(tile);
+		}
+	}
+	
+	public void removeTile(Tile tile) throws Exception{
+		tiles.remove(tile);
 	}
 	
 	public int getNumTiles(){
@@ -143,7 +156,7 @@ public class Set {
 	public void sortByNumber(){
 		Collections.sort(tiles);
 	}
-	
+
 	
 	/**
 	 * Sorts the tiles by colour first, then number
@@ -154,6 +167,7 @@ public class Set {
 		ArrayList<Set> colouredSets;
 		colouredSets = separateByColour();
 		
+		tiles = new ArrayList<Tile>();
 		for(int i=0; i<4; i++){
 			colouredSets.get(i).sortByNumber();
 			tiles.addAll(colouredSets.get(i).getTiles());
@@ -162,15 +176,17 @@ public class Set {
 	
 	private ArrayList<Set> separateByColour() throws Exception{
 		ArrayList<Set> colouredSets = new ArrayList<Set>();
+		ArrayList<Tile> duplicateHand;
 		Tile currentTile;
 		int numTiles;
 		
 		for(int i=0; i<4; i++)
 			colouredSets.add(new Set());
 		
-		numTiles = tiles.size();
+		duplicateHand = new ArrayList<Tile>(tiles);
+		numTiles = duplicateHand.size();
 		for(int i=0; i<numTiles; i++){
-			currentTile = tiles.remove(0);
+			currentTile = duplicateHand.remove(0);
 			
 			if(currentTile.colour == Tile.RED)
 				colouredSets.get(0).addTile(currentTile);
@@ -277,11 +293,8 @@ public class Set {
 		return runs;
 	}
 	
-	
 	private ArrayList<Set> separateSubRuns(ArrayList<Tile> tiles) throws Exception{
 		ArrayList<Set> runs;
-		
-		System.out.println("Started with : " + tiles.toString());
 		
 		runs = new ArrayList<Set>();
 		for(int i=tiles.size()-1; i > 1; i--){
@@ -290,6 +303,109 @@ public class Set {
 		}
 		
 		return runs;
+	}
+
+	public ArrayList<Set> getInitialMeld() throws Exception{
+		ArrayList<Set> melds;
+		int score;
+		
+		melds = getGroups();
+		melds.addAll(getRuns());
+		
+		melds = findLargestSubset(new ArrayList<Tile>(tiles), melds);
+		
+		if(melds == null)
+			return null;
+		
+		score = 0; 
+		for(int i=0; i<melds.size(); i++)
+			score = score + melds.get(i).getScore();
+		
+		if(score < 30)
+			return null;
+		
+		for(Set set : melds)
+			for(Tile tile : set.getTiles())
+				tiles.remove(tile);
+		
+		return melds;
+	}
+	
+	public ArrayList<Set> findLargestSubset(ArrayList<Tile> remainingHand, ArrayList<Set> possibleSets) throws Exception{
+		ArrayList<ArrayList<Set>> allValidSubsets;
+		ArrayList<Set> subsets;
+		ArrayList<Tile> currentSet, currentHand;
+
+		
+		allValidSubsets = new ArrayList<ArrayList<Set>>();
+//		System.out.println("*** Started recursive function ***");
+		
+		while(possibleSets.size() > 0){
+			currentHand = new ArrayList<Tile>(remainingHand);
+			currentSet = possibleSets.remove(0).getTiles();
+			
+//			System.out.println("\nMy hand is : " + currentHand.toString());
+//			System.out.println("The meld is : " + currentSet.toString());
+			
+			for(int j=0; j<currentSet.size(); j++){
+//				System.out.println("Considering Object " + (j+1) + " :" + currentSet.get(j));
+				
+				if(currentHand.contains(currentSet.get(j)))
+					currentHand.remove(currentSet.get(j));
+				else {
+					currentHand = null;
+					break;
+				}
+			}
+				
+			if(currentHand == null){
+//				System.out.println("The meld did not fit. Trying again");
+				continue;
+			}
+			
+			subsets = findLargestSubset(new ArrayList<Tile>(currentHand), new ArrayList<Set>(possibleSets));
+			
+			if(subsets == null)
+				subsets = new ArrayList<Set>();
+			
+			subsets.add(new Set(currentSet));
+			allValidSubsets.add(subsets);
+		}
+		
+		return findLargestSubset(allValidSubsets);
+			
+	}
+	
+	private ArrayList<Set> findLargestSubset(ArrayList<ArrayList<Set>> allValidSubsets){
+		ArrayList<Set> currentSubset;
+		int largest_index;
+		int score, largest_score;
+		
+		largest_index = -1;
+		largest_score = -1;
+		
+		for(int i=0; i<allValidSubsets.size(); i++){
+			currentSubset = allValidSubsets.get(i);
+			score = 0;			
+			
+			for(int j=0; j<currentSubset.size(); j++){
+				score = score + currentSubset.get(j).getScore();
+//				System.out.println("Subset " + (i+1) + ", set " + (j+1) + currentSubset.get(j).toString());
+			}
+//			System.out.println();
+			
+			if(score > largest_score){
+				largest_score = score;
+				largest_index = i;
+			}
+		}
+		
+//		System.out.println("The largest  group of sets was " + (largest_index +1));
+		
+		if(largest_score > 0)
+			return allValidSubsets.get(largest_index);
+		else
+			return null;
 	}
 	
 	// **********************************************************
@@ -305,8 +421,16 @@ public class Set {
 		if (!(other instanceof Set)) 
 			return false;
 
-		Set otherTile = (Set) other;
-		return this.getTiles() == otherTile.getTiles();
+		Set otherSet = (Set) other;
+		
+		if(this.tiles.size() != otherSet.tiles.size())
+			return false;
+		
+		for(int i=0; i<this.getNumTiles(); i++)
+			if(!this.tiles.get(i).equals(otherSet.tiles.get(i)))
+				return false;
+		
+		return true;
 	}
 	
 	@Override

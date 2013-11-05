@@ -10,6 +10,7 @@
 package rummikub;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -17,6 +18,7 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Scanner;
 
 /**
  * NOTES:
@@ -39,9 +41,10 @@ public class Server extends Thread{
     
     private Pool pool;
     private Set[] hands;
+    private Boolean[] initialMelds;
+    private GameInfo game;
     
-    private int currentTurn;
-    
+	private int turn;
     
     // **********************************************************
     // 						Server Methods 
@@ -57,10 +60,9 @@ public class Server extends Thread{
         inbox =  new BufferedReader[numPlayers];
         outbox = new PrintWriter[numPlayers];
         
-    	pool = null;
-    	hands = null;
-    	
-    	currentTurn = GameInfo.GAMEOVER;
+        pool = null;
+        hands = null;
+    	game = null;
     	
     	printStatus("Initialization complete");
     }
@@ -116,7 +118,7 @@ public class Server extends Thread{
             /* This ensures that clients have enough time to potentially read 
              * a Game over message in addition to a "move made" message before
              * the stream is closed and an irritating exception is thrown */
-            Thread.sleep(5000);
+            Thread.sleep(1000);
             serverSocket.close();
             printStatus("Server Socket Closed");
         }
@@ -221,59 +223,124 @@ public class Server extends Thread{
     // 					Gameplay Methods
     // **********************************************************
     
+    
+    
     @Override
     public void run(){
+    	Scanner keyboard = new Scanner(System.in);
         String message;
     	
         acceptClients();
         startGame();
-        
-        while(currentTurn != GameInfo.GAMEOVER){
+                
+        while(!game.isGameOver()){
+//        	printStatus("Press any button to continue .....");
+//        	keyboard.nextLine();
+        	
             try{
-            	outbox[currentTurn].println("Current state of game");
-    	        printStatus("Sent \"Current state of game\" to [ Client "+ (currentTurn + 1) +" ]");
+            	outbox[turn].println(game.toString());
+            	System.out.println(game.displayGame());
+    	        printStatus("Sent Current state of game to [ " + getCurrentPlayer() + " ]");
             	
-                message = inbox[currentTurn].readLine();
+                message = inbox[turn].readLine();
                 
                 // TODO interpret the move
                 // TODO respond back to the client
-                if(message.equalsIgnoreCase("draw"));
-                	outbox[currentTurn].println(pool.drawTile().toString());
+                if(message.equalsIgnoreCase("draw")){
+                	drawTile();
+                }
+            	else{
+            		playMeld(message);	
+            	}
  
-                currentTurn = (currentTurn + 1); // % clientSocket.length;
-                printStatus("It is now client " + GameInfo.getPlayer(currentTurn) + "'s turn");
+                changeTurn();
+                printStatus("It is now client " + getCurrentPlayer() + "'s turn");
             }
             
             catch(Exception e){
                 printStatus("A client has disconnected. Relaying game termination to all clients");
+                e.printStackTrace();
                 sendMessages(-1);
                 break;
             }
+            
         }
         
-        printStatus("Game Over! [ Client " + GameInfo.getPlayer(currentTurn) + " ] wins");
+        printStatus("Game Over! [ " + getCurrentPlayer() + " ] wins");
         this.disconnectClients();
     }
     
     private void startGame(){
+    	int numPlayers;
+    	
     	try{
-	    	this.pool = new Pool();
-	    	printStatus(pool.toString());
-	    	this.hands = new Set[clientSocket.length];
+    		numPlayers = clientSocket.length;
+    		
+    		this.pool = new Pool();
+    		this.hands = new Set[numPlayers];
+    		this.initialMelds = new Boolean[numPlayers];
+	    	this.game = new GameInfo(numPlayers);    	
 	    	
 	    	for(int i=0; i<hands.length; i++){
+	    		initialMelds[i] = false;
+	    		
 	    		hands[i] = new Set(pool.getHand());
 	    		hands[i].sortByColour();
 	    		outbox[i].println(hands[i].toString());
 	    	}
 	    	
-	    	currentTurn = GameInfo.PLAYER1;
+	    	this.turn = GameInfo.PLAYER1;
     	}
     	catch(Exception e){
     		System.out.println(e.getMessage());
     		e.printStackTrace();
     	}
     }
+    
+    private void drawTile() throws Exception{
+    	Tile nextTile;
+    	
+    	nextTile = pool.drawTile();
+    	hands[turn].addTile(nextTile);
+    	
+    	printStatus("Sent a new tile [ " + nextTile.toString() + " ] to [ " + getCurrentPlayer() + " ]");
+    	outbox[turn].println(nextTile.toString());
+    	
+    	game.addTile(turn);
+    }
+    
+    private void playMeld(String message) throws Exception{
+    	printStatus("Got message : from [ " + getCurrentPlayer() + " ]");
+    	game = new GameInfo(message);
+    }
+    
+	public void changeTurn(){
+		this.turn = (turn + 1) % hands.length;
+	}
+	
+	public String getCurrentPlayer(){
+		switch(this.turn){
+			case GameInfo.PLAYER1: 
+				return "Player 1";
+				
+			case GameInfo.PLAYER2: 
+				return "Player 2";
+				
+			case GameInfo.PLAYER3:
+				if(hands.length > 2)
+					return "Player 3";
+				break;
+				
+			case GameInfo.PLAYER4: 
+				if(hands.length > 3)
+					return "Player 4";
+				break;
+				
+			default: return "INVALID PLAYER";
+		}
+		
+		return "INVALID PLAYER";
+	}
     
     public static void main(String[] args) {
 		int numPlayers;
