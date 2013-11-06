@@ -1,6 +1,7 @@
 package rummikub;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GameInfo {
 	public static final int GAMEOVER = -1;
@@ -9,7 +10,7 @@ public class GameInfo {
 	public static final int PLAYER3 = 2;
 	public static final int PLAYER4 = 3;
 	
-	public static final int HAND_SIZE = 14;
+	public static final int HAND_SIZE = 7;
 	
 	private ArrayList<Set> board;
 	private Integer[] handSize;
@@ -64,8 +65,48 @@ public class GameInfo {
 		return false;
 	}
 	
+//	public ArrayList<Set> getHumanBasedMove(Set hand, int playerNum) throws Exception{
+//		HashMap<Tile, ArrayList<Integer>> endTiles, freeTiles;
+//		ArrayList<Set> melds;
+//		
+//		melds = hand.getInitialMeld();
+//		
+//		endTiles = getEndTiles();
+//		
+//		
+//		return null;
+//	}
+//	
+//	private HashMap<Tile, ArrayList<Integer>> getFreeTiles(){
+//		HashMap<Tile, ArrayList<Integer>> tiles = new HashMap<Tile, ArrayList<Integer>>();
+//		
+//		for(Set set : board){
+//			if(set.isRun){
+//				
+//			}
+//			else{
+//				if(set.getNumTiles() < 4)
+//			}
+//		}
+//		
+//		
+//	}
+//	
+//	private HashMap<Tile, ArrayList<Integer>> getEndTiles(){
+//		HashMap<Tile, ArrayList<Integer>> tiles = new HashMap<Tile, ArrayList<Integer>>();
+//		
+//		for(Set set : board){
+//			if(set.isRun){
+//				
+//			}
+//			else{
+//				if()
+//			}
+//		}
+//	}
+	
 	// combine hand with deck and find all valid moves
-	public ArrayList<Set> getMove(Set hand, int playerNum) throws Exception{
+	public ArrayList<Set> getBruteForceMove(Set hand, int playerNum) throws Exception{
 		ArrayList<Set> melds;
 		ArrayList<Tile> originalTiles, usedTiles;
 		Set allTiles;

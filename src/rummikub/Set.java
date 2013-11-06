@@ -5,6 +5,7 @@ import java.util.Collections;
 
 public class Set {
 	private ArrayList<Tile> tiles;
+	public final Boolean isRun;
 	
 	// **********************************************************
     // 						Constructors
@@ -15,6 +16,7 @@ public class Set {
 	 */
 	public Set(){
 		tiles = new ArrayList<Tile>();
+		isRun = null;
 	}
 	
 	/**
@@ -44,6 +46,7 @@ public class Set {
 		}
 		
 		Collections.shuffle(tiles);
+		this.isRun = null;
 	}
 	
 	/**
@@ -55,6 +58,12 @@ public class Set {
 	 */
 	public Set(ArrayList<Tile> tiles) throws Exception{
 		this.tiles = new ArrayList<Tile>(tiles);
+		this.isRun = null;
+	}
+	
+	public Set(ArrayList<Tile> tiles, boolean run){
+		this.tiles = new ArrayList<Tile>(tiles);
+		this.isRun = run;
 	}
 	
 	/**
@@ -64,6 +73,7 @@ public class Set {
 	 */
 	public Set(Set copy){
 		this.tiles = copy.getTiles();
+		this.isRun = copy.isRun;
 	}
 
 	/**
@@ -85,6 +95,15 @@ public class Set {
 		for(String tile : tokens)
 			if(tile.trim().length() > 0)
 				tiles.add(new Tile(tile));
+		
+		if(validateRun(tiles)){
+			isRun = true;
+		}
+		else if(validateGroup(tiles)){
+			isRun = false;
+		}
+		else
+			isRun = null;
 	}
 	
 	// **********************************************************
@@ -103,6 +122,56 @@ public class Set {
 		return true;
 	}
 	
+	boolean validateRun(ArrayList<Tile> tiles){
+        Tile currentTile;
+        char runColour;
+        int previousNum;
+        
+        Collections.sort(tiles);
+        runColour = tiles.get(0).colour;
+        previousNum = tiles.get(0).number;
+        
+        for(int i=1; i<tiles.size(); i++){
+                currentTile = tiles.get(i);
+                
+                if(currentTile.colour != runColour)
+                        return false;
+                
+                if(currentTile.number == previousNum + 1)
+                        previousNum++;
+                else
+                        return false;
+        }
+        
+        return true;
+	}
+	
+	boolean validateGroup(ArrayList<Tile> tiles){
+        Tile currentTile;
+        ArrayList<Character> usedColours;
+        int groupNumber;
+        
+        if(tiles.size() > 4)
+                return false;
+        
+        groupNumber = tiles.get(0).number;
+        usedColours = new ArrayList<Character>();
+        usedColours.add(tiles.get(0).colour);
+        
+        for(int i=1; i<tiles.size(); i++){
+                currentTile = tiles.get(i);
+                
+                if(currentTile.number != groupNumber)
+                        return false;
+                
+                if(usedColours.contains(currentTile.colour))
+                        return false;
+                
+                usedColours.add(currentTile.colour);
+        }
+        
+        return true;
+	}
 	
 	// **********************************************************
     // 					Getters and Setters
@@ -236,7 +305,7 @@ public class Set {
 			if(tile_set.size() < 3)
 				continue;
 			else if(tile_set.size() == 3)
-				groups.add(new Set(tile_set));
+				groups.add(new Set(tile_set, false));
 			else 
 				groups.addAll(separateSubGroups(tile_set));
 		}
@@ -252,7 +321,7 @@ public class Set {
 		for(int i=0; i<tiles.size(); i++){
 			temp_tiles = new ArrayList<Tile>(tiles);
 			temp_tiles.remove(i);
-			groups.add(new Set(temp_tiles));
+			groups.add(new Set(temp_tiles, false));
 		}
 		
 		return groups;
@@ -298,7 +367,7 @@ public class Set {
 		
 		runs = new ArrayList<Set>();
 		for(int i=tiles.size()-1; i > 1; i--){
-			runs.add(new Set(tiles));
+			runs.add(new Set(tiles, true));
 			tiles.remove(i);
 		}
 		

@@ -182,7 +182,7 @@ public class Client extends Thread{
 				}
 				
 				else{
-					play = game.getMove(hand, playerNum - 1);
+					play = game.getBruteForceMove(hand, playerNum - 1);
 					
 					if(play != null)
 						game.setMelds(play);
