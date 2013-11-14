@@ -306,8 +306,10 @@ public class Set {
 				continue;
 			else if(tile_set.size() == 3)
 				groups.add(new Set(tile_set, false));
-			else 
+			else {
+				groups.add(new Set(tile_set, false));
 				groups.addAll(separateSubGroups(tile_set));
+			}
 		}
 		
 		return groups;
@@ -381,7 +383,7 @@ public class Set {
 		melds = getGroups();
 		melds.addAll(getRuns());
 		
-		melds = findLargestSubset(new ArrayList<Tile>(tiles), melds);
+		melds = findLargestSubset(new ArrayList<Tile>(tiles), null, melds);
 		
 		if(melds == null)
 			return null;
@@ -400,39 +402,34 @@ public class Set {
 		return melds;
 	}
 	
-	public ArrayList<Set> findLargestSubset(ArrayList<Tile> remainingHand, ArrayList<Set> possibleSets) throws Exception{
+
+	public ArrayList<Set> findLargestSubset(ArrayList<Tile> remainingPool, ArrayList<Set> mandatorySets, ArrayList<Set> possibleSets) throws Exception{
 		ArrayList<ArrayList<Set>> allValidSubsets;
 		ArrayList<Set> subsets;
-		ArrayList<Tile> currentSet, currentHand;
+		ArrayList<Tile> currentSet, currentPool;
 
-		
 		allValidSubsets = new ArrayList<ArrayList<Set>>();
-//		System.out.println("*** Started recursive function ***");
+		if(remainingPool.size() < 3)
+			return null;
 		
 		while(possibleSets.size() > 0){
-			currentHand = new ArrayList<Tile>(remainingHand);
+			currentPool = new ArrayList<Tile>(remainingPool);
 			currentSet = possibleSets.remove(0).getTiles();
 			
-//			System.out.println("\nMy hand is : " + currentHand.toString());
-//			System.out.println("The meld is : " + currentSet.toString());
-			
 			for(int j=0; j<currentSet.size(); j++){
-//				System.out.println("Considering Object " + (j+1) + " :" + currentSet.get(j));
-				
-				if(currentHand.contains(currentSet.get(j)))
-					currentHand.remove(currentSet.get(j));
+				if(currentPool.contains(currentSet.get(j)))
+					currentPool.remove(currentSet.get(j));
 				else {
-					currentHand = null;
+					currentPool = null;
 					break;
 				}
-			}
+			}	
 				
-			if(currentHand == null){
-//				System.out.println("The meld did not fit. Trying again");
+			if(currentPool == null){
 				continue;
 			}
 			
-			subsets = findLargestSubset(new ArrayList<Tile>(currentHand), new ArrayList<Set>(possibleSets));
+			subsets = findLargestSubset(new ArrayList<Tile>(currentPool), mandatorySets, new ArrayList<Set>(possibleSets));
 			
 			if(subsets == null)
 				subsets = new ArrayList<Set>();
@@ -441,12 +438,13 @@ public class Set {
 			allValidSubsets.add(subsets);
 		}
 		
-		return findLargestSubset(allValidSubsets);
-			
+		
+		return findLargestSubset(allValidSubsets, mandatorySets);	
 	}
 	
-	private ArrayList<Set> findLargestSubset(ArrayList<ArrayList<Set>> allValidSubsets){
+	private ArrayList<Set> findLargestSubset(ArrayList<ArrayList<Set>> allValidSubsets, ArrayList<Set> mandatorySets){
 		ArrayList<Set> currentSubset;
+		ArrayList<Tile> copyTileset, mandatoryTiles;
 		int largest_index;
 		int score, largest_score;
 		
@@ -459,9 +457,25 @@ public class Set {
 			
 			for(int j=0; j<currentSubset.size(); j++){
 				score = score + currentSubset.get(j).getScore();
-//				System.out.println("Subset " + (i+1) + ", set " + (j+1) + currentSubset.get(j).toString());
 			}
-//			System.out.println();
+			
+			if(mandatorySets != null){
+				mandatoryTiles = new ArrayList<Tile>();
+				for(Set set : mandatorySets)
+					mandatoryTiles.addAll(set.getTiles());
+				
+				copyTileset = new ArrayList<Tile>();
+				for(Set set : currentSubset)
+					copyTileset.addAll(set.getTiles());
+				
+				for(Tile tile : mandatoryTiles){
+					if(copyTileset.contains(tile))
+						copyTileset.remove(tile);
+					else
+						continue;
+				}
+			}
+			
 			
 			if(score > largest_score){
 				largest_score = score;
@@ -469,13 +483,78 @@ public class Set {
 			}
 		}
 		
-//		System.out.println("The largest  group of sets was " + (largest_index +1));
-		
 		if(largest_score > 0)
 			return allValidSubsets.get(largest_index);
 		else
 			return null;
 	}
+	
+	
+	
+	
+	public ArrayList<Set> getMeldsFromHand() throws Exception{
+		ArrayList<Set> melds;
+		int score;
+		
+		melds = getGroups();
+		melds.addAll(getRuns());
+		
+		melds = findLargestSubset(new ArrayList<Tile>(tiles), null, melds);
+		
+		if(melds == null)
+			return new ArrayList<Set>();
+		
+		for(Set set : melds)
+			for(Tile tile : set.getTiles())
+				tiles.remove(tile);
+		
+		return melds;
+	}
+	
+	
+	
+	public ArrayList<Tile> getAdjacentInHand(Tile original){
+		ArrayList<Tile> similarTiles, allTiles;
+		boolean addedTiles;
+		
+		allTiles = new ArrayList<Tile>(this.tiles);
+		similarTiles = new ArrayList<Tile>();
+		
+		allTiles.remove(original);
+		addedTiles = true;
+		
+		while(addedTiles){
+			addedTiles = false;
+			
+			// for every tile we are interested in finding a match to
+			for(Tile comaprison : similarTiles){
+				
+				// compare to all remaining tiles in your hand 
+				for(Tile tile : allTiles){
+					if(comaprison.isAdjacent(tile)){
+						similarTiles.add(tile);
+						allTiles.remove(tile);
+						addedTiles = true;
+					}
+				}
+			}
+		}
+		
+		return similarTiles;
+	}
+	
+	public int getNumAdjacent(Tile original){
+		int numAdjacent;
+		
+		numAdjacent = 0;
+		
+		for(int i=0; i<tiles.size(); i++)				
+			if(original.isAdjacent(tiles.get(i)))	
+				numAdjacent++;
+		
+		return numAdjacent;
+	}
+	
 	
 	// **********************************************************
     //							Common							

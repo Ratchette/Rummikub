@@ -171,7 +171,25 @@ public class Tile implements Comparable<Tile>{
 	
 	@Override
 	public int compareTo(Tile other) {
-		return this.number - other.number;
+		int difference;
+		
+		// This sorts by number first, then on colour
+		difference = (this.number*10 + this.colour) - (other.number*10 + other.colour);
+		
+		return difference;
+	}
+	
+	public boolean isAdjacent(Tile other){
+		if(this.colour == other.colour){
+			if(Math.abs(this.number - other.number) == 1)
+				return true;
+		}
+		else{
+			if(this.number == other.number)
+				return true;
+		}
+		
+		return false;
 	}
 	
 	/**

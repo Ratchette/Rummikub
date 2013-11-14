@@ -254,6 +254,7 @@ public class Server extends Thread{
             	}
  
                 changeTurn();
+                printStatus("Tiles in pool: " + pool.remainingTiles());
                 printStatus("It is now client " + getCurrentPlayer() + "'s turn");
             }
             
@@ -310,7 +311,7 @@ public class Server extends Thread{
     }
     
     private void playMeld(String message) throws Exception{
-    	printStatus("Got message : from [ " + getCurrentPlayer() + " ]");
+    	printStatus("Got message from [ " + getCurrentPlayer() + " ]");
     	game = new GameInfo(message);
     }
     

@@ -141,8 +141,7 @@ public class Client extends Thread{
 			encodedHand = inbox.readLine();
 			printStatus("Received message: " + encodedHand);
 			hand = new Set(encodedHand);
-//			hand = new Set("[ o5 o6 o7 o8 o9 b6 x6 ]");
-			
+			printStatus("Current Hand : " + hand.toString());
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -154,14 +153,15 @@ public class Client extends Thread{
 	@Override
 	public void run() {
 		String message;
-		ArrayList<Set> play;
+		ArrayList<Set> play, trivialPlay;
+		Boolean playMade;
 		
 		connect("localhost");
 
 		try {
 			startGame();
 			
-			while (true) {
+			while (hand.getNumTiles() > 0) {
 				// the server will send you the current state of the board and the number of cards in each players hand before it is your turn
 				// YOU are responsible for checking if a player has won and disconnecting on your own!
 				
@@ -169,32 +169,54 @@ public class Client extends Thread{
 				game = new GameInfo(message);
 				
 				System.out.println(game.displayGame());
+				hand.sortByColour();
 				printStatus("Current Hand : " + hand.toString());
 				
-				if(!initialMeld){
+				playMade = false;
+				
+				if(initialMeld){
+//					play = game.getBruteForceMove(hand, playerNum - 1);
+//					if(play != null && play.size() > 0){
+//						game.setMelds(play);
+//						playMade = true;
+//					}
+					
+					// find if you have any plays to make in your hand
+					trivialPlay = hand.getMeldsFromHand();
+					if(trivialPlay.size() > 0){
+						game.addMelds(trivialPlay);
+						game.setHand(playerNum - 1, hand.getNumTiles());
+						playMade = true;
+					}
+					
+					play = game.getAdjacentPlay(hand, playerNum-1);
+					
+					if(play != null){
+						playMade = true;
+					}
+					else if (trivialPlay.size() > 0)
+						play = trivialPlay;
+				}
+				
+				else{
 					play = hand.getInitialMeld();
 					
 					if(play != null){
 						game.addMelds(play);
 						game.setHand(playerNum - 1, hand.getNumTiles());
 						initialMeld = true;
+						playMade = true;
 					}
-				}
-				
-				else{
-					play = game.getBruteForceMove(hand, playerNum - 1);
 					
-					if(play != null)
-						game.setMelds(play);
 				}
 				
 				// there is no play to make
-				if(play == null){
+				if(!playMade){
 					printStatus("Could not make a meld");
 					drawTile();
 				}
 				else{
-					playMeld(play);
+					transmitMeld(play);
 				}
 			}
 		}
@@ -219,13 +241,9 @@ public class Client extends Thread{
 		printStatus("My new hand is: " + hand.toString());
 	}
 	
-	private void playMeld(ArrayList<Set> melds) throws Exception{
-		
-		
+	private void transmitMeld(ArrayList<Set> melds) throws Exception{
 		for(int i=0; i<melds.size(); i++){
 			printStatus("Play: " + melds.get(i).toString());
-			// FIXME - this no longer works!
-//			hand.removeTiles(play.get(i));
 		}
 		outbox.println(game.toString());
 	}
@@ -234,6 +252,9 @@ public class Client extends Thread{
 	 * Closes the sockets and the streams before exiting the thread
 	 */
 	protected void done() {
+		if(hand.getNumTiles() == 0)
+			printStatus("YOU WIN!!!");
+		
 		try {
 			inbox.close();
 			outbox.close();
