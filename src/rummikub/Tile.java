@@ -5,6 +5,7 @@ public class Tile implements Comparable<Tile>{
 	public static final char ORANGE = 'o';
 	public static final char BLUE 	= 'b';
 	public static final char BLACK	= 'x';
+	public static final char[] COLOURS = {RED, ORANGE, BLUE, BLACK};
 	
 	public static final int JOKER = 14;
 	

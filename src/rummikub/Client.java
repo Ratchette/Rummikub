@@ -29,7 +29,7 @@ public class Client extends Thread{
 	private PrintWriter outbox;
 
 	private GameInfo game;
-	private Set hand;
+	private Hand hand;
 	private boolean initialMeld;
 	private int playerNum;	// discover if you are player 1 through 4 (for display purposes only)
 
@@ -140,8 +140,9 @@ public class Client extends Thread{
 		try{
 			encodedHand = inbox.readLine();
 			printStatus("Received message: " + encodedHand);
-			hand = new Set(encodedHand);
+			hand = new Hand(encodedHand);
 			printStatus("Current Hand : " + hand.toString());
+//			hand = new Set("[ o5 o6 o7 o8 o9 b6 x6 ]");
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -153,7 +154,7 @@ public class Client extends Thread{
 	@Override
 	public void run() {
 		String message;
-		ArrayList<Set> play, trivialPlay;
+		ArrayList<Meld> play, trivialPlay;
 		Boolean playMade;
 		
 		connect("localhost");
@@ -175,12 +176,6 @@ public class Client extends Thread{
 				playMade = false;
 				
 				if(initialMeld){
-//					play = game.getBruteForceMove(hand, playerNum - 1);
-//					if(play != null && play.size() > 0){
-//						game.setMelds(play);
-//						playMade = true;
-//					}
-					
 					// find if you have any plays to make in your hand
 					trivialPlay = hand.getMeldsFromHand();
 					if(trivialPlay.size() > 0){
@@ -216,7 +211,7 @@ public class Client extends Thread{
 					drawTile();
 				}
 				else{
-					transmitMeld(play);
+					playMeld(play);
 				}
 			}
 		}
@@ -241,7 +236,7 @@ public class Client extends Thread{
 		printStatus("My new hand is: " + hand.toString());
 	}
 	
-	private void transmitMeld(ArrayList<Set> melds) throws Exception{
+	private void playMeld(ArrayList<Meld> melds) throws Exception{
 		for(int i=0; i<melds.size(); i++){
 			printStatus("Play: " + melds.get(i).toString());
 		}

@@ -13,30 +13,45 @@ public class GameInfo {
 	public static final int HAND_SIZE = 14;
 	public static final int SUBSET_SIZE = 35;
 	
-	private ArrayList<Set> board;
+	private ArrayList<Meld> board;
 	private Integer[] handSize;
 	
+	// **********************************************************
+    //						Constructors							
+    // **********************************************************
+	
+	/**
+	 * Create a new game
+	 * @param numPlayers
+	 * 			The number of players in a game
+	 * @throws Exception
+	 */
 	public GameInfo(int numPlayers) throws Exception{
-    	this.board = new ArrayList<Set>();
+    	this.board = new ArrayList<Meld>();
     	
     	this.handSize = new Integer[numPlayers];
     	for(int i=0; i<handSize.length; i++)
     		handSize[i] = HAND_SIZE;
 	}
 	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param encodedGame
+	 * @throws Exception
+	 */
 	public GameInfo(String encodedGame) throws Exception{
 		String[] tokens;
 		int i;
 		
 		tokens = encodedGame.split(",");
-		
-		this.board = new ArrayList<Set>();
+		this.board = new ArrayList<Meld>();
 		
 		for(i=0; i<tokens.length; i++){
 			tokens[i] = tokens[i].trim();
 			
 			if(tokens[i].startsWith("["))
-				board.add(new Set(tokens[i]));
+				board.add(new Meld(tokens[i]));
 			else
 				break;
 		}
@@ -47,8 +62,16 @@ public class GameInfo {
 		for(i=0; i<handSize.length; i++)
 			handSize[i] = Integer.parseInt(tokens[i]);
 	}
-	
 
+	
+	// **********************************************************
+    //					Getters and setters							
+    // **********************************************************
+	
+	/**
+	 * Incremenets the number of tiles a player has
+	 * @param player the player who has added a tile to their hand
+	 */
 	public void addTile(int player){
 		handSize[player]++;
 	}
@@ -57,20 +80,49 @@ public class GameInfo {
 		handSize[player] = size;
 	}
 	
+	public void addMelds(ArrayList<Meld> newMelds){
+		board.addAll(newMelds);
+	} 	
+	
+	public void setMelds(ArrayList<Meld> melds){
+		ArrayList<Tile> oldTiles, newTiles;
+		
+		oldTiles = new ArrayList<Tile>();
+		for(Meld meld : board)
+			oldTiles.addAll(meld.getTiles());
+		
+		newTiles = new ArrayList<Tile>();
+		for(Meld meld: melds)
+			newTiles.addAll(meld.getTiles());
+
+		for(Tile tile : oldTiles)
+			newTiles.remove(tile);
+		
+		board = new ArrayList<Meld>(melds);
+	}
+	
+	/**
+	 * Determine if the game has been won yet
+	 * @return true if any player has no cards remaining in their hand
+	 */
 	public boolean isGameOver(){
 		for(int i=0; i<handSize.length; i++)
 			if(handSize[i] < 1)
 				return true;
 		
-		
 		return false;
 	}
 	
+
+	// **********************************************************
+    //						Move creation							
+    // **********************************************************
+
 	// combine hand with deck and find all valid moves
-	public ArrayList<Set> getBruteForceMove(Set hand, int playerNum) throws Exception{
-		ArrayList<Set> melds;
+	public ArrayList<Meld> getBruteForceMove(Hand hand, int playerNum) throws Exception{
+		ArrayList<Meld> melds;
 		ArrayList<Tile> originalTiles, usedTiles;
-		Set allTiles;
+		Hand allTiles;
 		
 		// add all tiles on the board and in your hand to one set
 		originalTiles = new ArrayList<Tile>();
@@ -79,7 +131,7 @@ public class GameInfo {
 			originalTiles.addAll(board.get(i).getTiles());
 		
 		// generate all possible runs + groups
-		allTiles = new Set(originalTiles);
+		allTiles = new Hand(originalTiles);
 		melds = allTiles.getGroups();
 		melds.addAll(allTiles.getRuns());
 		
@@ -115,89 +167,93 @@ public class GameInfo {
 		return melds;
 	}
 	
-	public ArrayList<Set> getAdjacentPlay(Set hand, int playerNum) throws Exception{
-		ArrayList<Set> relatedSets;
-		ArrayList<Tile> relatedTiles;
+	public ArrayList<Meld> getAdjacentPlay(Hand hand, int playerNum) throws Exception{
+		ArrayList<Meld> relatedSets;
+		ArrayList<Tile> startingTiles;
+		boolean playMade;
 		
 		// from brute force function!
-		ArrayList<Set> melds, playedMelds;
-		ArrayList<Tile> originalTiles, usedTiles;
-		Set allTiles;
+		ArrayList<Meld> melds, playedMelds;
+		ArrayList<Tile> tilesFromBoard, usedTiles;
+		Hand allTiles;
 		
-		playedMelds = new ArrayList<Set>();
+		playedMelds = new ArrayList<Meld>();
+		playMade = true;
 		
-		for(Tile startingTile : hand.getTiles()){
-			relatedTiles = new ArrayList<Tile>();
-			relatedTiles.add(startingTile);
-			relatedTiles.addAll(hand.getAdjacentInHand(startingTile));
-			relatedSets = getRelatedSets(relatedTiles, new ArrayList<Set>(board));
-			if(relatedSets.size() == 0)
-				continue;
+		while(playMade){
+			playMade = false;
 			
-			System.out.println("Related Tiles: " + relatedTiles.toString());
-			for(int i=0; i<relatedSets.size(); i++)
-				System.out.println("Related Sets : " + relatedSets.get(i).toString());
-			System.out.println("");	
-			
-			// add all tiles on the board and in your hand to one set
-			originalTiles = new ArrayList<Tile>();
-			originalTiles.addAll(relatedTiles);
-			for(int i=0; i<relatedSets.size(); i++)
-				originalTiles.addAll(relatedSets.get(i).getTiles());
-			
-			// generate all possible runs + groups
-			allTiles = new Set(originalTiles);
-			melds = allTiles.getGroups();
-			melds.addAll(allTiles.getRuns());
-			
-			// get the mutually exclusive subset with the largest score
-			melds = allTiles.findLargestSubset(new ArrayList<Tile>(allTiles.getTiles()), relatedSets, melds);
-			
-			// Create a list of tiles from the original board
-			originalTiles = new ArrayList<Tile>();
-			for(int i=0; i<relatedSets.size(); i++)
-				originalTiles.addAll(relatedSets.get(i).getTiles());
-			
-			// make a list of all tiles used in the new melds
-			usedTiles = new ArrayList<Tile>();
-			for(Set set : melds)
-				usedTiles.addAll(set.getTiles());
-			
-			// remove tiles from the original board from the tiles that you used
-			for(Tile tile : originalTiles){
-				if(usedTiles.contains(tile))
-					usedTiles.remove(tile);
+			for(Tile startingTile : hand.getTiles()){
+				startingTiles = new ArrayList<Tile>();
+				startingTiles.add(startingTile);
+				startingTiles.addAll(hand.getAdjacentInHand(startingTile));
+				relatedSets = getRelatedSets(startingTiles, new ArrayList<Meld>(board));
+				if(relatedSets.size() == 0)
+					continue;
+				
+				System.out.println("Related Tiles: " + startingTiles.toString());
+				for(int i=0; i<relatedSets.size(); i++)
+					System.out.println("Related Sets : " + relatedSets.get(i).toString());
+				System.out.println("");	
+				
+				// add all tiles on the board and in your hand to one set
+				tilesFromBoard = new ArrayList<Tile>();
+				for(int i=0; i<relatedSets.size(); i++){
+					tilesFromBoard.addAll(relatedSets.get(i).getTiles());
+					startingTiles.addAll(relatedSets.get(i).getTiles());
+				}
+				
+				// generate all possible runs + groups
+				allTiles = new Hand(startingTiles);
+				melds = allTiles.getGroups();
+				melds.addAll(allTiles.getRuns());
+				
+				// get the mutually exclusive subset with the largest score
+				melds = allTiles.findLargestSubset(new ArrayList<Tile>(allTiles.getTiles()), tilesFromBoard, melds);
+				if(melds == null)
+					continue;
+				
+				// make a list of all tiles used in the new melds
+				usedTiles = new ArrayList<Tile>();
+				for(Set set : melds)
+					usedTiles.addAll(set.getTiles());
+				
+				// remove tiles from the original board from the tiles that you used
+				for(Tile tile : tilesFromBoard){
+					if(usedTiles.contains(tile))
+						usedTiles.remove(tile);
+					else 
+						throw new Exception("You lost tile " + tile.toString());
+				}
+				
+				// remove the tiles that you played from your hand
+				for(Tile tile : usedTiles){
+					hand.removeTile(tile);
+					handSize[playerNum]--;
+				}
+				
+				if(usedTiles.size() > 0)
+					playMade = true;
+				
+				// update the board with the melds that changed
+				updateBoard(relatedSets, melds);
+				
+				// tiles were moved from your hand to the board
+				if(usedTiles.size() != 0)
+					playedMelds = melds;
 			}
-			
-			// remove the tiles that you played from your hand
-			for(Tile tile : usedTiles){
-				hand.removeTile(tile);
-				handSize[playerNum]--;
-			}
-			
-			// update the board with the melds that changed
-			updateBoard(relatedSets, melds);
-			
-			// tiles were moved from your hand to the board
-			if(usedTiles.size() != 0)
-				playedMelds.addAll(melds);
 		}
-		
+			
 		if(playedMelds.size() == 0){
-			System.out.println("NO MOVE MADE");
+			System.out.println("Could not create a using tiles on the board");
 			return null;
 		}
-		else{
-			for(int i=0; i<playedMelds.size(); i++)
-				System.out.println(playedMelds.get(i).toString());
-		}
-			
-			
+		
 		return playedMelds;
 	}
 	
 	
-	private void updateBoard(ArrayList<Set> originalSets, ArrayList<Set> melds){
+	private void updateBoard(ArrayList<Meld> originalSets, ArrayList<Meld> melds){
 		for(int i=0; i<originalSets.size(); i++){
 			for(int j=0; j<board.size(); j++){
 				if(originalSets.get(i).equals(board.get(j))){
@@ -211,14 +267,14 @@ public class GameInfo {
 	}
 	
 	
-	private ArrayList<Set> getRelatedSets(ArrayList<Tile> originalTiles, ArrayList<Set> board){
-		ArrayList<Set> adjacentSets;
+	private ArrayList<Meld> getRelatedSets(ArrayList<Tile> originalTiles, ArrayList<Meld> board){
+		ArrayList<Meld> adjacentSets;
 		ArrayList<Tile> adjacentTiles;
 		Integer[] numAdjacent;
 		int indexOfMostMatches, maximumMatches;
 		boolean addedTiles;
 		
-		adjacentSets = new ArrayList<Set>();
+		adjacentSets = new ArrayList<Meld>();
 		adjacentTiles = new ArrayList<Tile>(originalTiles);
 		addedTiles = true;
 		
@@ -261,31 +317,11 @@ public class GameInfo {
 		
 		return adjacentSets;
 	}
-	
-	
-	
-	public void addMelds(ArrayList<Set> newMelds){
-		board.addAll(newMelds);
-	} 	
-	
-	public void setMelds(ArrayList<Set> melds){
-		ArrayList<Tile> oldTiles, newTiles;
-		
-		oldTiles = new ArrayList<Tile>();
-		for(Set set : board)
-			oldTiles.addAll(set.getTiles());
-		
-		newTiles = new ArrayList<Tile>();
-		for(Set set: melds)
-			newTiles.addAll(set.getTiles());
 
-		for(Tile tile : oldTiles)
-			newTiles.remove(tile);
-		
-		board = new ArrayList<Set>(melds);
-	}
 	
-	
+	// **********************************************************
+    //						Display information							
+    // **********************************************************
 	
 	@Override
 	public String toString(){

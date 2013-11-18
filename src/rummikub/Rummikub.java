@@ -25,5 +25,26 @@ public class Rummikub {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
+		
+		HintHarness player;
+		boolean initial = false;
+		
+		if(args[0].equalsIgnoreCase("true"))
+			initial = true;
+		else if(args[0].equalsIgnoreCase("false"))
+			initial = false;
+		else{
+			System.out.println("Invalid input. The first arguemnt must be if you have made your initial meld yet");
+			System.exit(1);
+		}
+		
+		
+		try {
+			player = new HintHarness(initial);
+			player.run();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

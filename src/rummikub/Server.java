@@ -40,7 +40,7 @@ public class Server extends Thread{
     private BufferedReader[] inbox;	// messages from client to server
     
     private Pool pool;
-    private Set[] hands;
+    private Hand[] hands;
     private Boolean[] initialMelds;
     private GameInfo game;
     
@@ -278,14 +278,14 @@ public class Server extends Thread{
     		numPlayers = clientSocket.length;
     		
     		this.pool = new Pool();
-    		this.hands = new Set[numPlayers];
+    		this.hands = new Hand[numPlayers];
     		this.initialMelds = new Boolean[numPlayers];
 	    	this.game = new GameInfo(numPlayers);    	
 	    	
 	    	for(int i=0; i<hands.length; i++){
 	    		initialMelds[i] = false;
 	    		
-	    		hands[i] = new Set(pool.getHand());
+	    		hands[i] = new Hand(pool.getHand());
 	    		hands[i].sortByColour();
 	    		outbox[i].println(hands[i].toString());
 	    	}
