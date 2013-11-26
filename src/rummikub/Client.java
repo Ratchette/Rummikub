@@ -169,7 +169,6 @@ public class Client extends Thread{
 				message = inbox.readLine();
 				game = new GameInfo(message);
 				
-				System.out.println(game.displayGame());
 				hand.sortByColour();
 				printStatus("Current Hand : " + hand.toString());
 				

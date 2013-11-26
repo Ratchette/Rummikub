@@ -44,8 +44,6 @@ public class HintHarness {
 			message = message + hand.getNumTiles() + " 14";
 			
 			game = new GameInfo(message);
-			System.out.println("Hand: " + hand.toString());
-			System.out.println(game.displayGame());
 			
 			if(initialMeld){
 				// find if you have any plays to make in your hand
@@ -99,7 +97,8 @@ public class HintHarness {
 //				System.out.println(game.displayGame());
 				System.out.println();
 			}
-			
+			System.out.println("Hand: " + hand.toString());
+			System.out.println(game.displayGame());
 		}
 	}
 	
@@ -114,3 +113,26 @@ public class HintHarness {
 		}
 	}
 }
+
+/**
+[ b1 o1 x1 ]
+[ x4 x5 x6 x7 ]
+[ b5 b6 b7 ]
+[ b3 b4 b5 b6 ]
+[ o3 o4 o5 o6 ]
+[ r4 r5 r6 r7 ]
+[ r1 r2 r3 ]
+[ b4 r4 x4 ]
+[ x8 x9 x10 x11 ]
+[ x7 x8 x9 ]
+[ b8 b9 b10 b11 b12 ]
+[ r7 r8 r9 r10 ]
+[ b13 o13 x13 ]
+[ b13 o13 r13 x13 ]
+[ b12 o12 r12 x12 ]
+[ o11 r11 x11 ]
+[ b10 o10 r10 ]
+
+ */
+
+

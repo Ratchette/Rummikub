@@ -265,7 +265,7 @@ public class Hand extends Set{
 		melds = getGroups();
 		melds.addAll(getRuns());
 		
-		melds = findLargestSubset(new ArrayList<Tile>(this.getTiles()), null, melds);
+		melds = findLargestSubset(new ArrayList<Tile>(this.getTiles()), new ArrayList<Tile>(), melds);
 		
 		if(melds == null)
 			return null;
@@ -288,20 +288,23 @@ public class Hand extends Set{
 	public ArrayList<Meld> findLargestSubset(ArrayList<Tile> remainingHand, ArrayList<Tile> mandatoryTiles, ArrayList<Meld> possibleSets) throws Exception{
 		ArrayList<ArrayList<Meld>> allValidSubsets;
 		ArrayList<Meld> subsets;
-		ArrayList<Tile> currentSet, currentHand;
+		ArrayList<Tile> currentSet, currentHand, mandatoryCopy;
 
 		allValidSubsets = new ArrayList<ArrayList<Meld>>();
 		if(remainingHand.size() < 3)
 			return null;
 
 		while(possibleSets.size() > 0){
+			mandatoryCopy = new ArrayList<Tile>(mandatoryTiles);
 			currentHand = new ArrayList<Tile>(remainingHand);
 			currentSet = possibleSets.remove(0).getTiles();
 			
 			for(int j=0; j<currentSet.size(); j++){
 				
-				if(currentHand.contains(currentSet.get(j)))
+				if(currentHand.contains(currentSet.get(j))){
 					currentHand.remove(currentSet.get(j));
+					mandatoryCopy.remove(currentSet.get(j));
+				}
 				else {
 					currentHand = null;
 					break;
@@ -311,7 +314,7 @@ public class Hand extends Set{
 			if(currentHand == null)
 				continue;
 			
-			subsets = findLargestSubset(new ArrayList<Tile>(currentHand), mandatoryTiles, new ArrayList<Meld>(possibleSets));
+			subsets = findLargestSubset(new ArrayList<Tile>(currentHand), mandatoryCopy, new ArrayList<Meld>(possibleSets));
 			
 			if(subsets == null)
 				subsets = new ArrayList<Meld>();
@@ -348,6 +351,9 @@ public class Hand extends Set{
 				for(Tile mandatoryTile : mandatoryTiles){
 					if(usedTiles.contains(mandatoryTile))
 						usedTiles.remove(mandatoryTile);
+					else{
+						score = -1;
+					}
 				}
 			}
 			
@@ -369,7 +375,7 @@ public class Hand extends Set{
 		melds = getGroups();
 		melds.addAll(getRuns());
 		
-		melds = findLargestSubset(new ArrayList<Tile>(this.getTiles()), null, melds);
+		melds = findLargestSubset(new ArrayList<Tile>(this.getTiles()), new ArrayList<Tile>(), melds);
 		
 		if(melds == null)
 			return new ArrayList<Meld>();

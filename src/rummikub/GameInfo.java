@@ -136,7 +136,7 @@ public class GameInfo {
 		melds.addAll(allTiles.getRuns());
 		
 		// get the mutually exclusive subset with the largest score
-		melds = allTiles.findLargestSubset(new ArrayList<Tile>(allTiles.getTiles()), null, melds);
+		melds = allTiles.findLargestSubset(new ArrayList<Tile>(allTiles.getTiles()), new ArrayList<Tile>(), melds);
 
 		// Create a list of tiles from the original board
 		originalTiles = new ArrayList<Tile>();
