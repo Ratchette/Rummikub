@@ -1,20 +1,22 @@
 package rummikub;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class GameInfo {
-	public static final int GAMEOVER = -1;
 	public static final int PLAYER1 = 0;
 	public static final int PLAYER2 = 1;
 	public static final int PLAYER3 = 2;
 	public static final int PLAYER4 = 3;
 	
+	// end game turn statuses
+	public static final int GAMEOVER = -1;
+	public static final int DISCONNECT = -2;
+	
 	public static final int HAND_SIZE = 14;
 	public static final int SUBSET_SIZE = 35;
 	
 	private ArrayList<Meld> board;
-	private Integer[] handSize;
+	private Integer[] tilesInHand;
 	
 	// **********************************************************
     //						Constructors							
@@ -26,12 +28,12 @@ public class GameInfo {
 	 * 			The number of players in a game
 	 * @throws Exception
 	 */
-	public GameInfo(int numPlayers) throws Exception{
+	public GameInfo(int numPlayers) {
     	this.board = new ArrayList<Meld>();
     	
-    	this.handSize = new Integer[numPlayers];
-    	for(int i=0; i<handSize.length; i++)
-    		handSize[i] = HAND_SIZE;
+    	this.tilesInHand = new Integer[numPlayers];
+    	for(int i=0; i<tilesInHand.length; i++)
+    		tilesInHand[i] = HAND_SIZE;
 	}
 	
 	/**
@@ -57,10 +59,10 @@ public class GameInfo {
 		}
 		
 		tokens = tokens[i].split(" ");
-		this.handSize = new Integer[tokens.length];
+		this.tilesInHand = new Integer[tokens.length];
 		
-		for(i=0; i<handSize.length; i++)
-			handSize[i] = Integer.parseInt(tokens[i]);
+		for(i=0; i<tilesInHand.length; i++)
+			tilesInHand[i] = Integer.parseInt(tokens[i]);
 	}
 
 	
@@ -73,11 +75,11 @@ public class GameInfo {
 	 * @param player the player who has added a tile to their hand
 	 */
 	public void addTile(int player){
-		handSize[player]++;
+		tilesInHand[player]++;
 	}
 
 	public void setHand(int player, int size){
-		handSize[player] = size;
+		tilesInHand[player] = size;
 	}
 	
 	public void addMelds(ArrayList<Meld> newMelds){
@@ -106,11 +108,19 @@ public class GameInfo {
 	 * @return true if any player has no cards remaining in their hand
 	 */
 	public boolean isGameOver(){
-		for(int i=0; i<handSize.length; i++)
-			if(handSize[i] < 1)
+		for(int i=0; i<tilesInHand.length; i++)
+			if(tilesInHand[i] < 1)
 				return true;
 		
 		return false;
+	}
+	
+	public int getWinner(){
+		for(int i=0; i<tilesInHand.length; i++)
+			if(tilesInHand[i] < 1)
+				return i;
+		
+		return DISCONNECT;
 	}
 	
 
@@ -161,7 +171,7 @@ public class GameInfo {
 		// remove the tiles that you played from your hand
 		for(Tile tile : usedTiles){
 			hand.removeTile(tile);
-			handSize[playerNum]--;
+			tilesInHand[playerNum]--;
 		}
 		
 		return melds;
@@ -229,7 +239,7 @@ public class GameInfo {
 				// remove the tiles that you played from your hand
 				for(Tile tile : usedTiles){
 					hand.removeTile(tile);
-					handSize[playerNum]--;
+					tilesInHand[playerNum]--;
 				}
 				
 				if(usedTiles.size() > 0)
@@ -332,8 +342,8 @@ public class GameInfo {
 		for(int i=0; i<board.size(); i++)
 			encoding = encoding + board.get(i).toString() + ", ";
 		
-		for(int i=0; i<handSize.length; i++)
-			encoding = encoding + handSize[i] + " ";
+		for(int i=0; i<tilesInHand.length; i++)
+			encoding = encoding + tilesInHand[i] + " ";
 		
 		return encoding;
 	}
@@ -345,8 +355,8 @@ public class GameInfo {
 		game = "\n--------------------------------------------------------\n";
 		
 		game = game + "Hand Sizes: ";
-		for(int i=0; i<handSize.length; i++)
-			game = game + handSize[i] + " ";
+		for(int i=0; i<tilesInHand.length; i++)
+			game = game + tilesInHand[i] + " ";
 		
 		game = game + "\nBoard:\n";
 		for(Set set : board)
@@ -356,4 +366,57 @@ public class GameInfo {
 		
 		return game;
 	}
+
+	/**
+	 * Translate an index into the name of a player
+	 * 
+	 * @param index the index of the player
+	 * @return The player number if the index is one of the predefined
+	 * 			numbers. "INVALID PLAYER" otherwise.
+	 */
+	public static String indexToPlayerName(int index){
+		switch(index){
+			case GameInfo.PLAYER1: 
+				return "Player 1";
+				
+			case GameInfo.PLAYER2: 
+				return "Player 2";
+				
+			case GameInfo.PLAYER3:
+				return "Player 3";
+				
+			case GameInfo.PLAYER4: 
+				return "Player 4";
+				
+			default: 
+				return "INVALID PLAYER";
+		}
+	}
+	
+	/**
+	 * Translate the name of a player to an index
+	 * @param player The name of the player
+	 * @return The player number - 1 if the player is 1, 2, 3, or 4
+	 * 			-1 otherwise
+	 */
+	public static int playerToIndex(String player){
+		if(player.trim().equalsIgnoreCase("Player 1"))
+			return PLAYER1;
+		else if(player.trim().equalsIgnoreCase("Player 2"))
+			return PLAYER2;
+		else if(player.trim().equalsIgnoreCase("Player 3"))
+			return PLAYER3;
+		else if(player.trim().equalsIgnoreCase("Player 4"))
+			return PLAYER4;
+		else
+			return -1;
+	}
+	
+	public int getNextPlayer(int current){
+		if(isGameOver())
+			return GAMEOVER;
+		
+		return (current + 1) % tilesInHand.length;
+	}
 }
+

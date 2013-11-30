@@ -4,21 +4,18 @@
  * 
  * @since 2013-10-24
  * Created: October 24, 2013
- * Last Modified: October 24, 2013
+ * Last Modified: November 28, 2013
  */
 
 package rummikub;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Scanner;
 
 /**
  * NOTES:
@@ -26,13 +23,16 @@ import java.util.Scanner;
  */
 
 /**
- * A class that models a Rummikub server.
- * The server performs the game setup as well as the validation of moves
+ * A class that models a Rummikub server that keeps track of 
+ * the game and all players. Its two primary functions are to 
+ * validate the move that each player makes, then relay it to 
+ * all other players. 
  * 
  * @author jwiner
  */
 public class Server extends Thread{
-	public static final int portNum = 4900;
+	public static final String SERVER_IP = "localhost";
+	public static final int PORT_NUM = 4900;
 
     private static ServerSocket serverSocket;  
     private Socket[] clientSocket;
@@ -45,9 +45,13 @@ public class Server extends Thread{
     private GameInfo game;
     
 	private int turn;
+	private int round;
+	
+	// FIXME Calculate the total playtime 
+	private Date startTime;
     
     // **********************************************************
-    // 						Server Methods 
+    // 						Constructors
     // **********************************************************
     
     /**
@@ -66,41 +70,35 @@ public class Server extends Thread{
     	
     	printStatus("Initialization complete");
     }
-    
-    /**
-     * Prints the current status of the server
-     * This function should be called at least once from every other function in the server
-     * @param message	What is going on
-     */
-	public void printStatus(String message){
-		String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-		System.out.println("\t" + date + " >> [[ Server ]] " + message);
-	}
-   
 	
     // **********************************************************
     // 					Communication Methods
     // **********************************************************
 	
     /**
-     * Configure and connect sockets
+     * Configure and connect clients to sockets
      */
     private void acceptClients(){
+    	String clientGrammer;
+    	clientGrammer = "clients";
+    	
     	printStatus("Now ready to accept " + Integer.toString(clientSocket.length) + " clients");
     	
         try{
-            serverSocket = new ServerSocket(portNum);	
+            serverSocket = new ServerSocket(PORT_NUM);	
             
             for(int i=0; i<clientSocket.length; i++){
+            	if(i == 1)
+            		clientGrammer = "client";
                 printStatus("Waiting for " + Integer.toString(clientSocket.length - i)
-                				+ " more clients");
+                				+ " more " + clientGrammer);
                 
             	clientSocket[i] = serverSocket.accept();
             	inbox[i] = new BufferedReader(new InputStreamReader(clientSocket[i].getInputStream()));
                 outbox[i] = new PrintWriter(clientSocket[i].getOutputStream(), true);
-                outbox[i].println(i+1);
+                outbox[i].println(i);
 
-                printStatus("Accept client " + Integer.toString(i+1));
+                printStatus("Accepted client " + Integer.toString(i+1));
             }
         }
         
@@ -114,7 +112,10 @@ public class Server extends Thread{
      * Closes the sockets and streams of all clients
      */
     private void disconnectClients() {
+    	// FIXME broadcast to all players who won
+    	
         try{
+        	printStatus("Game Over! [ " + GameInfo.indexToPlayerName(this.turn) + " ] wins");
             /* This ensures that clients have enough time to potentially read 
              * a Game over message in addition to a "move made" message before
              * the stream is closed and an irritating exception is thrown */
@@ -139,142 +140,64 @@ public class Server extends Thread{
         }
     }
    
-    
     /**
-     * Interprets the message sent from a client. If the move was valid, record it.
-     * 
-     * @param message The client's move encoded in an integer
-     * 
+     * Interprets the message sent from a client. 
      */
-    private int decodeMessage(String message){
-//        if( 0 <= message && message < 9){
-//            if(gameGrid[message/3][message%3] == -1)
-//                gameGrid[message/3][message%3] = currentTurn;
-//            else
-//                message =  message + 30;
-//            
-//            return message;
-//        }
-//        
-//        else{
-//            System.out.println("Unknown message " + message + " recieved from the client!!");
-//            return -5;
-//        }
-    	
-    	printStatus("The method [ decodeMessage ] has not yet been implemented");
-    	return -1;
-    }
-
-    /**
-     * It sends a detailed message back to each client through the sockets 
-     * about how to alter their Gui to match the current state of the game.
-     * 
-     * @param message The client's move encoded in an integer
-     */
-    private void sendMessages(int message){
-//        int winner = isGameOver();
-//        int currentClient;
-//        
-//        try{
-//            for(currentClient=0; currentClient<2; currentClient++){
-//                try{
-//                    // If the game has ended
-//                    if(winner != -1){
-//                        if(winner == 3)
-//                            outbox[currentClient].writeInt(3);
-//                        else if(winner == currentClient)
-//                            outbox[currentClient].writeInt(1);
-//                        else
-//                            outbox[currentClient].writeInt(2);     
-//                    }
-//                    
-//                    // If the move was valid, tell both clients what move was made and whose turn it is
-//                    if(0 <= message && message < 9){  
-//                        outbox[currentClient].writeInt(message + 10 + 10*((currentTurn + currentClient)%2));
-//                    }
-//
-//                    // if the move was NOT valid, tell the client who played that move to try again
-//                    else if (30 <= message && message < 39){
-//                        if(currentTurn == currentClient)
-//                            outbox[currentClient].writeInt(message);
-//                    }
-//
-//                    // If someone disconnected, tell their partner that the game has ended
-//                    else if (message == -1 && currentTurn != currentClient){
-//                        outbox[currentClient].writeInt(-1);
-//                    }
-//                    else
-//                        System.out.println("Unknown message " + message);
-//                }
-//                catch(Exception e){
-//                    System.out.println("Partner " + (currentClient+1) + " disconnected");
-//                    outbox[(currentClient+1)%2].writeInt(-1);
-//                }
-//            }
-//        }
-//        catch(Exception e){
-//            System.out.println("Both Parties have disconnected???");
-//        }
-    	
-    	printStatus("The method [ server.sendMessages ] has not yet been implemented");
+    private void decodeMessage(String message) throws Exception{
+        if(message.equalsIgnoreCase("draw"))
+        	drawTile();
+    	else
+    		playMeld(message);
     }
     
     // **********************************************************
-    // 					Gameplay Methods
+    // 					Gameplay Methods (server thread)
     // **********************************************************
-    
-    
     
     @Override
     public void run(){
-    	Scanner keyboard = new Scanner(System.in);
         String message;
     	
         acceptClients();
         startGame();
                 
-        while(!game.isGameOver()){
-//        	printStatus("Press any button to continue .....");
-//        	keyboard.nextLine();
+        while(turn >= GameInfo.PLAYER1 && turn < hands.length){
+        	
+        	updateRound();
+        	printStatus("It is now " + GameInfo.indexToPlayerName(this.turn) + "'s turn");
+        	printStatus("Sent Current state of game");
+        	printStatus("Tiles in pool: " + pool.remainingTiles());
+        	
+        	// receive move
+        	System.out.println(game.displayGame());
+        	outbox[turn].println(game.toString());
         	
             try{
-            	outbox[turn].println(game.toString());
-            	System.out.println(game.displayGame());
-    	        printStatus("Sent Current state of game to [ " + getCurrentPlayer() + " ]");
-            	
                 message = inbox[turn].readLine();
+                decodeMessage(message);
                 
-                // TODO interpret the move
-                // TODO respond back to the client
-                if(message.equalsIgnoreCase("draw")){
-                	drawTile();
-                }
-            	else{
-            		playMeld(message);	
-            	}
- 
-                changeTurn();
-                printStatus("Tiles in pool: " + pool.remainingTiles());
-                printStatus("It is now client " + getCurrentPlayer() + "'s turn");
+                turn = game.getNextPlayer(this.turn);
             }
             
             catch(Exception e){
+//                e.printStackTrace();
                 printStatus("A client has disconnected. Relaying game termination to all clients");
-                e.printStackTrace();
-                sendMessages(-1);
+                this.turn = GameInfo.DISCONNECT;
                 break;
             }
-            
         }
         
-        printStatus("Game Over! [ " + getCurrentPlayer() + " ] wins");
         this.disconnectClients();
     }
     
+    /**
+     * Initialize a new game board
+     */
     private void startGame(){
     	int numPlayers;
     	
     	try{
+    		startTime = new Date();
     		numPlayers = clientSocket.length;
     		
     		this.pool = new Pool();
@@ -291,69 +214,86 @@ public class Server extends Thread{
 	    	}
 	    	
 	    	this.turn = GameInfo.PLAYER1;
+	    	this.round = 0;
     	}
     	catch(Exception e){
+    		System.out.println("FATAL ERROR: unable to create a new game");
     		System.out.println(e.getMessage());
     		e.printStackTrace();
+    		System.exit(-1);
     	}
     }
     
+    /**
+     * The user chose to draw a tile
+     * @throws Exception
+     */
     private void drawTile() throws Exception{
     	Tile nextTile;
     	
     	nextTile = pool.drawTile();
     	hands[turn].addTile(nextTile);
-    	
-    	printStatus("Sent a new tile [ " + nextTile.toString() + " ] to [ " + getCurrentPlayer() + " ]");
-    	outbox[turn].println(nextTile.toString());
-    	
     	game.addTile(turn);
+    	
+    	outbox[turn].println(nextTile.toString());
+    	printStatus("No move made");
+    	printStatus("Sent a new tile [ " + nextTile.toString() + " ] to [ " + GameInfo.indexToPlayerName(this.turn) + " ]");
     }
     
+    /**
+     * Add the move a player made to the board
+     * 
+     * @param message the play that they made
+     * @throws Exception If any of the melds or tiles that they used in their 
+     * 		play are invalid
+     */
     private void playMeld(String message) throws Exception{
-    	printStatus("Got message from [ " + getCurrentPlayer() + " ]");
+    	printStatus("Got a play from [ " + GameInfo.indexToPlayerName(this.turn) + " ]");
     	game = new GameInfo(message);
     }
     
-	public void changeTurn(){
-		this.turn = (turn + 1) % hands.length;
-	}
-	
-	public String getCurrentPlayer(){
-		switch(this.turn){
-			case GameInfo.PLAYER1: 
-				return "Player 1";
-				
-			case GameInfo.PLAYER2: 
-				return "Player 2";
-				
-			case GameInfo.PLAYER3:
-				if(hands.length > 2)
-					return "Player 3";
-				break;
-				
-			case GameInfo.PLAYER4: 
-				if(hands.length > 3)
-					return "Player 4";
-				break;
-				
-			default: return "INVALID PLAYER";
-		}
-		
-		return "INVALID PLAYER";
+    /**
+     * Keeps track of how many rounds have passed so far
+     */
+	private void updateRound(){
+    	System.out.println("\n\n========================================================");
+    	
+    	if(turn == GameInfo.PLAYER1){
+        	round++;
+        	System.out.printf( "------------------      Round %2d      ------------------\n", round);
+    	}
+    	
+    	System.out.println("========================================================\n");
 	}
     
+	// **********************************************************
+    // 					Main Methods
+    // **********************************************************
+	
+	/**
+	 * Runs the server as a thread
+	 * @param args command line arguments sent to main
+	 */
     public static void main(String[] args) {
 		int numPlayers;
 		
-		numPlayers = parseArguments(args);
-		if(numPlayers == -1)
+		numPlayers = validateArguments(args);
+		if(numPlayers == -1){
+			printUsage();
 			return;
+		}
 		
 		(new Server(numPlayers)).start();
 	}
     
-    public static int parseArguments(String[] args){
+    /**
+     * Validates the arguments used to run this program
+     * @param args The command line arguments that the user entered
+     * @return The number of players per game of rummikub (a number between 2 - 4)
+     * 			If the user input was not a number between 2 and 4, then it returns -1
+     * 			
+     */
+    public static int validateArguments(String[] args){
 		if(args.length < 1){
 			System.out.println("Too few arguments.");
 			System.out.println("The first argument to this function must be the number of players that this server will support.");
@@ -371,4 +311,25 @@ public class Server extends Thread{
 		
 		return -1;
 	}
+    
+    /**
+     * Print the correct way to run this program to the command line
+     */
+    public static void printUsage(){
+		System.out.println("\nProper syntax is:");
+		System.out.println("Server.java <num_players>");
+		System.out.println("\tnum_players = The number of players in this game. Possible values are 2, 3, or 4");
+    }
+    
+    /**
+     * Prints the current status of the server
+     * This function should be called at least once from every other function in the server
+     * @param message	What is going on
+     */
+	public void printStatus(String message){
+		String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		System.out.println("\t" + date + " >> [[ Server ]] " + message);
+	}    
+    
 }
+

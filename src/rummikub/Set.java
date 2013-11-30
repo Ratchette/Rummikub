@@ -1,7 +1,6 @@
 package rummikub;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 public abstract class Set {
 	private ArrayList<Tile> tiles;

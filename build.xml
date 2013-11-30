@@ -1,7 +1,7 @@
 <project name="Rummikub" basedir="." default="all" >
 	
     <description>
-        The buildfile rummikub
+        The buildfile for rummikub
     </description>
 
 	<!-- File structure -->
@@ -9,12 +9,12 @@
     <property name="bin"            value="bin"/>
     <property name="dist"           value="dist"/>
     <property name="docs"           value="docs"/>
-    <property name="images"         value="images"/>
 	
     <!-- Program and arguments -->
 	<property name="package"        value="rummikub"/>
-    <property name="client.name" 	value="Client"/>
-    <property name="server.name" 	value="Server"/>
+    <property name="server.name"    value="Server"/>
+    <property name="rai.name"       value="RAIclient"/>
+	<property name="hint.name"      value="HintClient"/>
 	
     <property name="server.Address" value="localhost"/>
     <property name="num.players"     value="2"/>
@@ -23,29 +23,13 @@
     <!--*************** DONT TOUCH BELLOW THIS LINE ******************-->
     <!--**************************************************************-->
 
-    <target name="all" 	    depends="javadoc, client_jar, server_jar, game_jar" />
-    <target name="client" 	depends="client_jar"/>
-    <target name="server" 	depends="server_jar"/>
-	<target name="game"     depends="game_jar"/>
-    
-    <!-- Client Build -->
-    <target name="client_class">
-        <mkdir dir="${bin}"/>
-        <javac includeantruntime="false" source="1.6" target="1.6" srcdir="${src}"
-            destdir="${bin}" debug="true" debuglevel="lines,vars,source" />
-    </target>
+    <target name="all" 	    depends="javadoc, server_jar, rai_jar, game_jar, hint_jar" />
+	<target name="game"     depends="game_jar, game_run"/>
+    <target name="server" 	depends="server_jar, server_run"/>
+	<target name="rai"      depends="rai_jar, rai_run"/>
+	<target name="hint"     depends="hint_jar"/>
+                
 	
-    <target name="client_jar" depends="client_class">
-        <mkdir dir="${dist}"/>
-        <jar destfile="${dist}/${client.name}.jar" basedir="${bin}">
-        	<fileset dir="${images}"/>
-            <manifest>
-                <attribute name="Main-Class" value="${package}.${client.name}"/>
-            </manifest>
-        </jar>
-    </target>
-			
-                        
     <!-- Server Build -->
     <target name="server_class">
         <mkdir dir="${bin}"/>
@@ -63,8 +47,25 @@
     </target>
 	
 	
+	<!-- RAI Client Build -->
+    <target name="rai_class">
+        <mkdir dir="${bin}"/>
+        <javac includeantruntime="false" source="1.6" target="1.6" srcdir="${src}"
+            destdir="${bin}" debug="true" debuglevel="lines,vars,source" />
+    </target>
+    
+    <target name="rai_jar" depends="rai_class">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/${rai.name}.jar" basedir="${bin}">
+            <manifest>
+                <attribute name="Main-Class" value="${package}.${rai.name}"/>
+            </manifest>
+        </jar>
+    </target>
+	
+	
 	<!-- Game Build -->
-    <target name="game_class">
+    <target name="game_class" description="An automated game between AIs">
         <mkdir dir="${bin}"/>
         <javac includeantruntime="false" source="1.6" target="1.6" srcdir="${src}" 
             destdir="${bin}" debug="true" debuglevel="lines,vars,source"/>
@@ -78,24 +79,47 @@
             </manifest>
         </jar>
     </target>
+	
+	
+	<!-- Hint Build -->
+    <target name="hint_class">
+        <mkdir dir="${bin}"/>
+        <javac includeantruntime="false" source="1.6" target="1.6" srcdir="${src}" 
+            destdir="${bin}" debug="true" debuglevel="lines,vars,source"/>
+    </target>
+    
+    <target name="hint_jar" depends="hint_class">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/${hint.name}.jar" basedir="${bin}">
+            <manifest>
+                <attribute name="Main-Class" value="${package}.${hint.name}"/>
+            </manifest>
+        </jar>
+    </target>
 
 
     <!-- Running the programs -->
-    <target name="client_run" description="Run the client">
-        <java jar="${dist}/${client.name}.jar" fork="true">
+    <target name="server_run" description="Run the server">
+        <java jar="${dist}/${server.name}.jar" fork="true">
+            <arg value="${num.players}"/>
+        </java>
+    </target>
+	
+	<target name="rai_run" description="Run the client">
+        <java jar="${dist}/${rai.name}.jar" fork="true">
             <arg value="${server.Address}"/>
         </java>
     </target>
-   
 	
-    <target name="server_run" description="Run the server">
-        <java jar="${dist}/${server.name}.jar" fork="true" />
-    </target>
-	
-	
-	<target name="run" description="Run the demo of the game">
+	<target name="game_run" description="Run the automated demo of the game">
         <java jar="${dist}/${ant.project.name}.jar" fork="true" >
         	<arg value="${num.players}"/>
+        </java>
+    </target>
+	
+	<target name="hint_run" description="Run the demo of the hint system">
+        <java jar="${dist}/${hint.name}.jar" fork="true" >
+            <arg value="false"/>
         </java>
     </target>
 	
