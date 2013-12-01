@@ -91,7 +91,7 @@ public class Server extends Thread{
      * @return The number of players per game of rummikub (a number between 2 - 4)
      * 			If the user input was not a number between 2 and 4, then it returns -1
      */
-    public static int validateArguments(String[] args){
+    private static int validateArguments(String[] args){
 		if(args.length < 1){
 			System.out.println("Too few arguments.");
 			System.out.println("The first argument to this function must be the number of players that this server will support.");
@@ -174,7 +174,7 @@ public class Server extends Thread{
      * This function should be called at least once from every other function in the server
      * @param message	What is going on
      */
-	public void printStatus(String message){
+	private void printStatus(String message){
 		String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 		System.out.println("\t" + date + " >> [[ Server ]] " + message);
 	}  
@@ -304,6 +304,11 @@ public class Server extends Thread{
     private void playMeld(String message) throws Exception{
     	printStatus("Got a play from [ " + GameInfo.indexToPlayerName(this.turn) + " ]");
     	game = new GameInfo(message);
+    	
+    	// FIXME Validation missing
+    	/**
+    	 * Modify this method to validate the following
+    	 */
     }
     
     // **********************************************************
@@ -317,16 +322,18 @@ public class Server extends Thread{
     	String stringScores;
     	int finalScore[];
     	
-    	printStatus("Game Over! [ " + GameInfo.indexToPlayerName(turn) + " ] wins");
+    	System.out.println();
+    	printStatus("[ GAME OVER ] " + GameInfo.indexToPlayerName(turn) + " wins");
     	
 		stringScores = "";
 		finalScore = new int[hands.length];	// all elements are set to 0 by default in Java
 		
 		// Calculate the scores of each player 
     	for(int i=0; i<finalScore.length; i++){
+    		outbox[i].println(game.toString());
+    		
     		if(i != turn){
     			try {
-    				outbox[i].println(game.toString());
 					finalScore[i] = finalScore[i] + Integer.parseInt(inbox[i].readLine()) * -1;
 				} catch (Exception e) {
 					printStatus(GameInfo.indexToPlayerName(i) + " has already terminated their connection.");
@@ -339,14 +346,16 @@ public class Server extends Thread{
     	// Create a string that contains all scores
     	stringScores = "";
     	for(int i=0; i<finalScore.length; i++)
-    		stringScores = stringScores + "," + finalScore[i];
+    		stringScores = stringScores + finalScore[i] + ",";
+    	stringScores = stringScores.substring(0,stringScores.lastIndexOf(","));
     	
     	// Broadcast the scores to all players and display the final results in the server
     	for(int i=0; i<finalScore.length; i++){
     		if(i == turn)
     			printStatus("[ " + GameInfo.indexToPlayerName(i) + " ] : " + finalScore[i]);
     		else
-    			printStatus(GameInfo.indexToPlayerName(i) + " : " + finalScore[i]);
+    			printStatus("  " + GameInfo.indexToPlayerName(i) + "   : " + finalScore[i]);
+    		
     		
     		outbox[i].println(stringScores);
     	}

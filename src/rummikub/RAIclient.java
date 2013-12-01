@@ -139,6 +139,17 @@ public class RAIclient extends Thread{
 		this.endGame();
 	}
 	
+	/**
+	 * Prints the current status of the client
+	 * 
+	 * @param message
+	 *            What is going on in the client
+	 */
+	private void printStatus(String message) {
+		String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		System.out.println("\t" + date + " >> [ " + GameInfo.indexToPlayerName(playerIndex)+ " ] " + message);
+	}
+	
 	// **********************************************************
     // 						Starting a Game
     // **********************************************************
@@ -158,12 +169,26 @@ public class RAIclient extends Thread{
 		game = new GameInfo(client.getMessage());
 	}
 
+	// **********************************************************
+    // 						Playing a game
+    // **********************************************************
+	
+    /**
+     * Keeps track of how many rounds have passed so far
+     */
+	private void updateRound(){
+		round++;
+		
+    	System.out.println("\n\n========================================================");
+    	System.out.printf( "------------------      Round %2d      ------------------\n", round);
+    	System.out.println("========================================================\n");
+	}
+	
 	/**
 	 * You chose to draw a new tile from the deck
 	 * @throws Exception
 	 */
 	private void drawTile() throws Exception{
-		
 		client.sendMessage("draw");
 		
 		hand.addTile(new Tile(client.getMessage()));
@@ -186,6 +211,13 @@ public class RAIclient extends Thread{
 		hand.sortByColour();
 	}
 	
+	
+	// **********************************************************
+	//					Ending a Game
+	// **********************************************************
+	
+	// FIXME - move this section into the client class?
+	
 	/**
 	 * Closes the sockets and the streams before exiting the thread
 	 */
@@ -197,12 +229,14 @@ public class RAIclient extends Thread{
 				client.sendMessage("" + hand.getScore());
 				finalScores = client.getMessage();
 				
+				System.out.println("\n********************************************************\n");
+				
 				if(hand.getNumTiles() == 0)
 					printStatus("YOU WIN!!!");
 				else
-					printStatus("YOU LOSE.");
+					printStatus("YOU LOSE");
 				
-				displayFinalScores(finalScores);
+				displayFinalScores(finalScores.trim());
 			}
 		}
 		catch(Exception e){
@@ -213,49 +247,26 @@ public class RAIclient extends Thread{
 		printStatus("Disconnected from the server");
 	}
 	
-	private void displayFinalScores(String response){
-		String scores[];
-		int currentScore;
-		int sum;
-		
-		scores = response.split(",");
-		sum = 0;
-		
-		printStatus("Final Scores: ");
-		for(int i=0; i<scores.length; i++){
-			currentScore = Integer.parseInt(scores[i]);
-			sum = sum + currentScore;
-			
-			if(i != playerIndex)
-				printStatus("\t [ " + GameInfo.indexToPlayerName(i) + " ] : " + currentScore * -1);
-		}
-		
-		printStatus("My score : " + sum);
-	}
-	
-	// **********************************************************
-	// **********************************************************
-	// **********************************************************
-	
 	/**
-	 * Prints the current status of the client
+	 * print out the final scores of all players
 	 * 
-	 * @param message
-	 *            What is going on in the client
+	 * @param results the results at the end of the game
 	 */
-	public void printStatus(String message) {
-		String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-		System.out.println("\t" + date + " >> [ " + GameInfo.indexToPlayerName(playerIndex)+ " ] " + message);
+	private void displayFinalScores(String results){
+		String score[];
+		
+		score = results.split(",");
+		
+		System.out.println();
+		printStatus("My Score: " + score[playerIndex]);
+		printStatus("My hand : " + hand.toString());
+		
+		System.out.println();
+		printStatus("Opponent Scores: ");
+		for(int i=0; i<score.length; i++)
+			if(i != playerIndex)
+				printStatus("\t[ " + GameInfo.indexToPlayerName(i) + " ] : " + score[i]);
+		System.out.println();
 	}
 	
-    /**
-     * Keeps track of how many rounds have passed so far
-     */
-	private void updateRound(){
-		round++;
-		
-    	System.out.println("\n\n========================================================");
-    	System.out.printf( "------------------      Round %2d      ------------------\n", round);
-    	System.out.println("========================================================\n");
-	}
 }
