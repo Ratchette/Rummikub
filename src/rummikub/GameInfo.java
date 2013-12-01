@@ -1,6 +1,7 @@
 package rummikub;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class GameInfo {
 	public static final int PLAYER1 = 0;
@@ -57,6 +58,7 @@ public class GameInfo {
 			else
 				break;
 		}
+		Collections.sort(board);
 		
 		tokens = tokens[i].split(" ");
 		this.tilesInHand = new Integer[tokens.length];
@@ -123,6 +125,9 @@ public class GameInfo {
 		return DISCONNECT;
 	}
 	
+	public ArrayList<Meld> getBoard(){
+		return new ArrayList<Meld>(board);
+	}
 
 	// **********************************************************
     //						Move creation							
@@ -201,10 +206,10 @@ public class GameInfo {
 				if(relatedSets.size() == 0)
 					continue;
 				
-				System.out.println("Related Tiles: " + startingTiles.toString());
-				for(int i=0; i<relatedSets.size(); i++)
-					System.out.println("Related Sets : " + relatedSets.get(i).toString());
-				System.out.println("");	
+//				System.out.println("Related Tiles: " + startingTiles.toString());
+//				for(int i=0; i<relatedSets.size(); i++)
+//					System.out.println("Related Sets : " + relatedSets.get(i).toString());
+//				System.out.println("");	
 				
 				// add all tiles on the board and in your hand to one set
 				tilesFromBoard = new ArrayList<Tile>();
@@ -236,6 +241,12 @@ public class GameInfo {
 						throw new Exception("You lost tile " + tile.toString());
 				}
 				
+				
+				// FIXME move harness stuff
+				Hand oldHand = new Hand(hand);
+				ArrayList<Meld> oldBoard = new ArrayList<Meld>(board);
+				
+				
 				// remove the tiles that you played from your hand
 				for(Tile tile : usedTiles){
 					hand.removeTile(tile);
@@ -249,15 +260,19 @@ public class GameInfo {
 				updateBoard(relatedSets, melds);
 				
 				// tiles were moved from your hand to the board
-				if(usedTiles.size() != 0)
+				if(usedTiles.size() != 0){
 					playedMelds = melds;
+					new Move(oldHand, new Hand(hand), oldBoard, new ArrayList<Meld>(board));
+				}
 			}
 		}
 			
 		if(playedMelds.size() == 0){
-			System.out.println("Could not create a using tiles on the board");
+//			System.out.println("Could not create a using tiles on the board");
 			return null;
 		}
+		else
+			System.out.println("\n--------------------------------------------------------\n");
 		
 		return playedMelds;
 	}
@@ -347,6 +362,7 @@ public class GameInfo {
 		
 		return encoding;
 	}
+	
 	
 	
 	public String displayGame(){

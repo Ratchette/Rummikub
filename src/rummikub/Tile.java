@@ -2,7 +2,7 @@ package rummikub;
 
 public class Tile implements Comparable<Tile>{
 	public static final char RED 	= 'r';
-	public static final char ORANGE = 'o';
+	public static final char ORANGE = 'g';
 	public static final char BLUE 	= 'b';
 	public static final char BLACK	= 'x';
 	public static final char[] COLOURS = {RED, ORANGE, BLUE, BLACK};
@@ -159,6 +159,15 @@ public class Tile implements Comparable<Tile>{
 		Tile otherTile = (Tile) other;
 		return this.colour == otherTile.colour
 				&& this.number == otherTile.number;
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + colour;
+		result = prime * result + number;
+		return result;
 	}
 	
 	@Override

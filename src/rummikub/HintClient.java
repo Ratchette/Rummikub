@@ -88,29 +88,38 @@ public class HintClient extends Thread{
 		ArrayList<Meld> play, trivialPlay;
 		Boolean playMade;
 		
+		try{
+			startGame();
 			
 		while (hand.getNumTiles() > 0) {
+			updateRound();
 			playMade = false;
 			
 			System.out.print("Enter the current state of the board: ");
 			message = keyboard.nextLine().trim();
 			if(message.endsWith("]"))
 				message = message + ", ";
-				
 			message = message + hand.getNumTiles() + " 14";
-			
 			game = new GameInfo(message);
+			
+			
+			System.out.println("Current Hand : " + hand.toString());
+			System.out.println(game.displayGame());
 			
 			if(initialMeld){
 				// find if you have any plays to make in your hand
 				trivialPlay = hand.getMeldsFromHand();
 				if(trivialPlay.size() > 0){
 					game.addMelds(trivialPlay);
-					game.setHand(playerNum, hand.getNumTiles());
+					game.setHand(playerIndex, hand.getNumTiles());
 					playMade = true;
+					
+					for(int i=0; i<trivialPlay.size(); i++){
+						System.out.println("Play: " + trivialPlay.get(i).toString());
+					}
 				}
 				
-				play = game.getAdjacentPlay(hand, playerNum);
+				play = game.getAdjacentPlay(hand, playerIndex);
 				
 				if(play != null){
 					playMade = true;
@@ -124,11 +133,14 @@ public class HintClient extends Thread{
 				
 				if(play != null){
 					game.addMelds(play);
-					game.setHand(playerNum, hand.getNumTiles());
+					game.setHand(playerIndex, hand.getNumTiles());
 					initialMeld = true;
 					playMade = true;
+					
+					for(int i=0; i<play.size(); i++){
+						System.out.println("Play: " + play.get(i).toString());
+					}
 				}
-				
 			}
 			
 			// there is no play to make
@@ -142,29 +154,37 @@ public class HintClient extends Thread{
 				else
 					hand.addTile(new Tile(message));
 				
-				game.setHand(playerNum, hand.getNumTiles());
+				game.setHand(playerIndex, hand.getNumTiles());
 			}
 			else{
-				// you can make a move
-				for(int i=0; i<play.size(); i++){
-					System.out.println("Play: " + play.get(i).toString());
-				}
-//				System.out.println("Play : ");
-//				System.out.println(game.displayGame());
-				System.out.println();
+//				// you can make a move
+//				
+////				System.out.println("Play : ");
+////				System.out.println(game.displayGame());
+//				System.out.println();
 			}
 			
+			System.out.println("========================================================\n");
+			System.out.println("The game is now: ");
 			System.out.println(game.displayGame());
 			System.out.println("Hand : " + hand.toString());
 			System.out.println("Score: " + hand.getScore());
 		}
-		
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	// **********************************************************
 	//					Ending a Game
 	// **********************************************************
-
+	private void updateRound(){
+		round++;
+		
+    	System.out.println("\n\n========================================================");
+    	System.out.printf( "------------------      Round %2d      ------------------\n", round);
+    	System.out.println("========================================================\n");
+	}
 	
 }
 

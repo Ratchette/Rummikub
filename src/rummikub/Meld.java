@@ -3,7 +3,7 @@ package rummikub;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Meld extends Set{
+public class Meld extends Set implements Comparable<Meld>{
 	public final boolean isRun;
 	
 	// **********************************************************
@@ -13,9 +13,9 @@ public class Meld extends Set{
 	/**
      * Generate a run or 
      * @param tiles
-     *                         the set that you wish to duplicate
+     *          the set that you wish to duplicate
      * @throws Exception
-     *                         If the array of tiles do not form valid run or group
+     *          If the array of tiles do not form valid run or group
      */
     public Meld(ArrayList<Tile> tiles) throws Exception{
         super(tiles);
@@ -203,5 +203,90 @@ public class Meld extends Set{
 				numAdjacent++;
 		
 		return numAdjacent;
+	}
+	
+	@Override
+	public int compareTo(Meld other) {
+		if(this.isRun && !other.isRun)
+			return -1;
+		else if(!this.isRun && other.isRun)
+			return 1;
+		
+		if(isRun)
+			return compareRuns(other);
+		else
+			return compareGroups(other);
+	}
+	
+	private int compareRuns(Meld other){
+		ArrayList<Tile> myTiles;
+		ArrayList<Tile> otherTiles;
+		int difference;
+
+		myTiles = this.getTiles();
+		otherTiles = other.getTiles();
+		
+		// compare number
+		difference = myTiles.get(0).number - otherTiles.get(0).number;
+		if(difference != 0)
+			return difference;
+		
+		// compare the colours
+		difference = myTiles.get(0).colour - otherTiles.get(0).colour;
+		if(difference != 0)
+			return difference;
+		
+		// compare the lengths
+		return myTiles.size() - otherTiles.size();
+	}
+	
+	private int compareGroups(Meld other){
+		ArrayList<Tile> myTiles;
+		ArrayList<Tile> otherTiles;
+		int difference;
+
+		myTiles = this.getTiles();
+		otherTiles = other.getTiles();
+		
+		// compare number
+		difference = myTiles.get(0).number - otherTiles.get(0).number;
+		if(difference != 0)
+			return difference;
+		
+		// compare size
+		difference = myTiles.size() - otherTiles.size();
+		if(difference != 0)
+			return difference;
+		
+		// lastly compare the colours
+		for(int i=0; i<myTiles.size(); i++)
+			if(myTiles.get(i).colour != otherTiles.get(i).colour)
+				return myTiles.get(0).colour - otherTiles.get(0).colour;
+		
+		return 0;
+	}
+	
+	@Override
+	public boolean equals (Object other){
+		if(other == null)
+			return false;
+
+		if (!(other instanceof Meld)) 
+			return false;
+
+		Meld otherMeld = (Meld) other;
+		if(this.isRun != otherMeld.isRun)
+			return false;
+		if(this.getNumTiles() != otherMeld.getNumTiles())
+			return false;
+		
+		ArrayList<Tile> myTiles = getTiles();
+		ArrayList<Tile> otherTiles = otherMeld.getTiles();
+		
+		for(int i=0; i<myTiles.size(); i++)
+			if(!myTiles.get(i).equals(otherTiles.get(i)))
+				return false;
+		
+		return true;
 	}
 }
