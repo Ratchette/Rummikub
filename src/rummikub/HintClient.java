@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class HintClient extends Thread{
-	private final int playerNum;
+	private final int playerIndex;
 	
 	private Scanner keyboard;
 	
@@ -40,7 +40,7 @@ public class HintClient extends Thread{
 		}
 		
 		// TODO Change to something more meaningful?
-		playerNum = GameInfo.PLAYER1;
+		playerIndex = GameInfo.PLAYER1;
 	}
 	
 	

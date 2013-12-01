@@ -10,6 +10,7 @@
 package rummikub;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -72,9 +73,116 @@ public class Server extends Thread{
     }
 	
     // **********************************************************
-    // 					Communication Methods
+    // 					Main + User input Validation
     // **********************************************************
-	
+    /**
+     * Print the correct way to run this program to the command line
+     */
+    public static void printUsage(){
+		System.out.println("\nProper syntax is:");
+		System.out.println("Server.java <num_players>");
+		System.out.println("\tnum_players = The number of players in this game. Possible values are 2, 3, or 4");
+    }
+    
+    
+    /**
+     * Validates the arguments used to run this program
+     * @param args The command line arguments that the user entered
+     * @return The number of players per game of rummikub (a number between 2 - 4)
+     * 			If the user input was not a number between 2 and 4, then it returns -1
+     */
+    public static int validateArguments(String[] args){
+		if(args.length < 1){
+			System.out.println("Too few arguments.");
+			System.out.println("The first argument to this function must be the number of players that this server will support.");
+		}
+		else if(!args[0].matches("^\\d$")){
+			System.out.println("The first argument " + args[0] + " is invalid");
+			System.out.println("The first argument to this function must be an integer that represents the number of players that this server will support.");
+		}
+		else if(Integer.parseInt(args[0]) < 2 || Integer.parseInt(args[0]) > 4){
+			System.out.println("The first argument " + args[0] + " is invalid");
+			System.out.println("This game can only support between 2-4 players");
+		}
+		else
+			return Integer.parseInt(args[0]);
+		
+		return -1;
+	}
+    
+	/**
+	 * Runs the server as a thread
+	 * @param args command line arguments sent to main
+	 */
+    public static void main(String[] args) {
+		int numPlayers;
+		
+		numPlayers = validateArguments(args);
+		if(numPlayers == -1){
+			printUsage();
+			return;
+		}
+		
+		(new Server(numPlayers)).start();
+	} 
+    
+    /**
+     * The heart of the server. 
+     * NOTE: this function should never be called directly, it should be invoked
+     * 		indirectly through the start of the thread.
+     * 
+     *  for more information, please see: 
+     *  	http://docs.oracle.com/javase/tutorial/essential/concurrency/
+     */
+    @Override
+    public void run(){
+        String message;
+    	
+        acceptClients();
+        startGame();
+                
+        while(!game.isGameOver()){
+        	updateTurn();
+        	printStatus("It is now " + GameInfo.indexToPlayerName(this.turn) + "'s turn");
+        	printStatus("Tiles in pool: " + pool.remainingTiles());
+        	
+        	// receive move
+        	System.out.println(game.displayGame());
+        	outbox[turn].println(game.toString());
+        	
+            try{
+                message = inbox[turn].readLine();
+                interpretMessage(message);
+            }
+            
+            catch(Exception e){
+//                e.printStackTrace();
+                printStatus("A client has disconnected. Relaying game termination to all clients");
+                this.turn = GameInfo.DISCONNECT;
+                break;
+            }
+        }
+        
+        if(game.isGameOver())
+        	broadcastFinalScores();
+        
+        this.disconnectClients();
+    }
+    
+    /**
+     * Prints the current status of the server
+     * This function should be called at least once from every other function in the server
+     * @param message	What is going on
+     */
+	public void printStatus(String message){
+		String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		System.out.println("\t" + date + " >> [[ Server ]] " + message);
+	}  
+    
+    // **********************************************************
+    // 						Start Game
+    // **********************************************************
+    
     /**
      * Configure and connect clients to sockets
      */
@@ -109,88 +217,6 @@ public class Server extends Thread{
     }
     
     /**
-     * Closes the sockets and streams of all clients
-     */
-    private void disconnectClients() {
-    	// FIXME broadcast to all players who won
-    	
-        try{
-        	printStatus("Game Over! [ " + GameInfo.indexToPlayerName(this.turn) + " ] wins");
-            /* This ensures that clients have enough time to potentially read 
-             * a Game over message in addition to a "move made" message before
-             * the stream is closed and an irritating exception is thrown */
-            Thread.sleep(1000);
-            serverSocket.close();
-            printStatus("Server Socket Closed");
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-        
-        for(int i=0; i<clientSocket.length; i++){
-	        try{
-	            inbox[i].close();
-	            outbox[i].close();
-	            clientSocket[i].close();
-	        }
-	        catch(Exception e){
-	        	printStatus("[ Player " + Integer.toString(i+1)
-	        			+ " ] disconnected before I could terminate connection");
-	        }
-        }
-    }
-   
-    /**
-     * Interprets the message sent from a client. 
-     */
-    private void decodeMessage(String message) throws Exception{
-        if(message.equalsIgnoreCase("draw"))
-        	drawTile();
-    	else
-    		playMeld(message);
-    }
-    
-    // **********************************************************
-    // 					Gameplay Methods (server thread)
-    // **********************************************************
-    
-    @Override
-    public void run(){
-        String message;
-    	
-        acceptClients();
-        startGame();
-                
-        while(turn >= GameInfo.PLAYER1 && turn < hands.length){
-        	
-        	updateRound();
-        	printStatus("It is now " + GameInfo.indexToPlayerName(this.turn) + "'s turn");
-        	printStatus("Sent Current state of game");
-        	printStatus("Tiles in pool: " + pool.remainingTiles());
-        	
-        	// receive move
-        	System.out.println(game.displayGame());
-        	outbox[turn].println(game.toString());
-        	
-            try{
-                message = inbox[turn].readLine();
-                decodeMessage(message);
-                
-                turn = game.getNextPlayer(this.turn);
-            }
-            
-            catch(Exception e){
-//                e.printStackTrace();
-                printStatus("A client has disconnected. Relaying game termination to all clients");
-                this.turn = GameInfo.DISCONNECT;
-                break;
-            }
-        }
-        
-        this.disconnectClients();
-    }
-    
-    /**
      * Initialize a new game board
      */
     private void startGame(){
@@ -213,7 +239,7 @@ public class Server extends Thread{
 	    		outbox[i].println(hands[i].toString());
 	    	}
 	    	
-	    	this.turn = GameInfo.PLAYER1;
+	    	this.turn = GameInfo.PLAYER1 - 1;
 	    	this.round = 0;
     	}
     	catch(Exception e){
@@ -222,6 +248,34 @@ public class Server extends Thread{
     		e.printStackTrace();
     		System.exit(-1);
     	}
+    }
+
+    // **********************************************************
+    // 						Gameplay
+    // **********************************************************
+    
+    /**
+     * Keeps track of how many rounds have passed so far
+     */
+	private void updateTurn(){
+		turn = game.getNextPlayer(this.turn);
+		
+    	System.out.println("\n\n========================================================");
+    	if(turn == GameInfo.PLAYER1){
+        	round++;
+        	System.out.printf( "------------------      Round %2d      ------------------\n", round);
+    	}
+    	System.out.println("========================================================\n");
+	}
+    
+    /**
+     * Interprets the message sent from a client. 
+     */
+    private void interpretMessage(String message) throws Exception{
+        if(message.equalsIgnoreCase("draw"))
+        	drawTile();
+    	else
+    		playMeld(message);
     }
     
     /**
@@ -252,84 +306,74 @@ public class Server extends Thread{
     	game = new GameInfo(message);
     }
     
+    // **********************************************************
+    // 						End Game
+    // **********************************************************
+    
     /**
-     * Keeps track of how many rounds have passed so far
+     * Calculate everyones final score then broadcast this to everyone
      */
-	private void updateRound(){
-    	System.out.println("\n\n========================================================");
+	private void broadcastFinalScores(){
+    	String stringScores;
+    	int finalScore[];
     	
-    	if(turn == GameInfo.PLAYER1){
-        	round++;
-        	System.out.printf( "------------------      Round %2d      ------------------\n", round);
+    	printStatus("Game Over! [ " + GameInfo.indexToPlayerName(turn) + " ] wins");
+    	
+		stringScores = "";
+		finalScore = new int[hands.length];	// all elements are set to 0 by default in Java
+		
+		// Calculate the scores of each player 
+    	for(int i=0; i<finalScore.length; i++){
+    		if(i != turn){
+    			try {
+    				outbox[i].println(game.toString());
+					finalScore[i] = finalScore[i] + Integer.parseInt(inbox[i].readLine()) * -1;
+				} catch (Exception e) {
+					printStatus(GameInfo.indexToPlayerName(i) + " has already terminated their connection.");
+				}
+    			
+    			finalScore[turn] = finalScore[turn] + finalScore[i] * -1;
+    		}
     	}
     	
-    	System.out.println("========================================================\n");
-	}
-    
-	// **********************************************************
-    // 					Main Methods
-    // **********************************************************
-	
-	/**
-	 * Runs the server as a thread
-	 * @param args command line arguments sent to main
-	 */
-    public static void main(String[] args) {
-		int numPlayers;
-		
-		numPlayers = validateArguments(args);
-		if(numPlayers == -1){
-			printUsage();
-			return;
-		}
-		
-		(new Server(numPlayers)).start();
-	}
-    
-    /**
-     * Validates the arguments used to run this program
-     * @param args The command line arguments that the user entered
-     * @return The number of players per game of rummikub (a number between 2 - 4)
-     * 			If the user input was not a number between 2 and 4, then it returns -1
-     * 			
-     */
-    public static int validateArguments(String[] args){
-		if(args.length < 1){
-			System.out.println("Too few arguments.");
-			System.out.println("The first argument to this function must be the number of players that this server will support.");
-		}
-		else if(!args[0].matches("^\\d$")){
-			System.out.println("The first argument " + args[0] + " is invalid");
-			System.out.println("The first argument to this function must be an integer that represents the number of players that this server will support.");
-		}
-		else if(Integer.parseInt(args[0]) < 2 || Integer.parseInt(args[0]) > 4){
-			System.out.println("The first argument " + args[0] + " is invalid");
-			System.out.println("This game can only support between 2-4 players");
-		}
-		else
-			return Integer.parseInt(args[0]);
-		
-		return -1;
-	}
-    
-    /**
-     * Print the correct way to run this program to the command line
-     */
-    public static void printUsage(){
-		System.out.println("\nProper syntax is:");
-		System.out.println("Server.java <num_players>");
-		System.out.println("\tnum_players = The number of players in this game. Possible values are 2, 3, or 4");
+    	// Create a string that contains all scores
+    	stringScores = "";
+    	for(int i=0; i<finalScore.length; i++)
+    		stringScores = stringScores + "," + finalScore[i];
+    	
+    	// Broadcast the scores to all players and display the final results in the server
+    	for(int i=0; i<finalScore.length; i++){
+    		if(i == turn)
+    			printStatus("[ " + GameInfo.indexToPlayerName(i) + " ] : " + finalScore[i]);
+    		else
+    			printStatus(GameInfo.indexToPlayerName(i) + " : " + finalScore[i]);
+    		
+    		outbox[i].println(stringScores);
+    	}
     }
     
     /**
-     * Prints the current status of the server
-     * This function should be called at least once from every other function in the server
-     * @param message	What is going on
+     * Closes the sockets and streams of all clients
      */
-	public void printStatus(String message){
-		String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-		System.out.println("\t" + date + " >> [[ Server ]] " + message);
-	}    
-    
+    private void disconnectClients() {
+        for(int i=0; i<clientSocket.length; i++){
+	        try{
+	            inbox[i].close();
+	            outbox[i].close();
+	            clientSocket[i].close();
+	        }
+	        catch(Exception e){
+	        	printStatus("[ " + GameInfo.indexToPlayerName(i) + " ] disconnected before I could terminate connection");
+	        }
+        }
+
+        try {
+			serverSocket.close();
+		} catch (IOException e) {
+			printStatus("[ ERROR ] the server socket is already closed?");
+			e.printStackTrace();
+		}
+    }
 }
+
 

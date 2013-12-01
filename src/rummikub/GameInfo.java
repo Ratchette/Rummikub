@@ -413,9 +413,6 @@ public class GameInfo {
 	}
 	
 	public int getNextPlayer(int current){
-		if(isGameOver())
-			return GAMEOVER;
-		
 		return (current + 1) % tilesInHand.length;
 	}
 }
