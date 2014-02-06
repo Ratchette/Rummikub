@@ -3,8 +3,11 @@ Rummikub
 
 The game of Rummikub
 
-=Future Implementation Ideas=
-==Server==
+Future Implementation Ideas
+============================
+
+Server
+-------
 - Make the server compute the total time it takes to play a game (using Java's Date structure)
 - printUsage: find a way to unify the name of the program in this function and in the ant file (AKA figure out a way to share to have both use the same variable
 - run: analyze the exception that was thrown (what and from who) to provide the user with more meaningful input as to the error
