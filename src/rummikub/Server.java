@@ -4,7 +4,7 @@
  * 
  * @since 2013-10-24
  * Created: October 24, 2013
- * Last Modified: November 28, 2013
+ * Last Modified: February 6, 2014
  */
 
 package rummikub;
@@ -17,6 +17,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+
 
 /**
  * NOTES:
@@ -32,6 +34,7 @@ import java.util.Date;
  * @author jwiner
  */
 public class Server extends Thread{
+	// FIXME - change this to the static IP of your server
 	public static final String SERVER_IP = "localhost";
 	public static final int PORT_NUM = 4900;
 
@@ -48,35 +51,14 @@ public class Server extends Thread{
 	private int turn;
 	private int round;
 	
-	// FIXME Calculate the total playtime 
-	private Date startTime;
-    
-    // **********************************************************
-    // 						Constructors
-    // **********************************************************
-    
-    /**
-     * Constructor for the server
-     * @param numPlayers The number of players per game
-     */
-    public Server(int numPlayers){
-    	serverSocket = null;
-        clientSocket = new Socket[numPlayers];
-        inbox =  new BufferedReader[numPlayers];
-        outbox = new PrintWriter[numPlayers];
-        
-        pool = null;
-        hands = null;
-    	game = null;
-    	
-    	printStatus("Initialization complete");
-    }
+
 	
     // **********************************************************
-    // 					Main + User input Validation
+    // 					Input Validation
     // **********************************************************
+    
     /**
-     * Print the correct way to run this program to the command line
+     * Print the correct usage of this program to the command line
      */
     public static void printUsage(){
 		System.out.println("\nProper syntax is:");
@@ -109,6 +91,35 @@ public class Server extends Thread{
 		
 		return -1;
 	}
+
+    
+    
+    // **********************************************************
+    // 						Initialization 
+    // **********************************************************
+    
+    /**
+     * Constructor for the server
+     * @param numPlayers The number of players per game
+     */
+    public Server(int numPlayers){
+    	serverSocket = null;
+        clientSocket = new Socket[numPlayers];
+        inbox =  new BufferedReader[numPlayers];
+        outbox = new PrintWriter[numPlayers];
+        
+        pool = null;
+        hands = null;
+    	game = null;
+    	
+    	printStatus("Initialization complete");
+    }
+    
+    
+    
+    // **********************************************************
+    // 							Daemon
+    // **********************************************************
     
 	/**
 	 * Runs the server as a thread
@@ -127,9 +138,9 @@ public class Server extends Thread{
 	} 
     
     /**
-     * The heart of the server. 
+     * The server's background thread
      * NOTE: this function should never be called directly, it should be invoked
-     * 		indirectly through the start of the thread.
+     * 		through the start method of java threads.
      * 
      *  for more information, please see: 
      *  	http://docs.oracle.com/javase/tutorial/essential/concurrency/
@@ -144,19 +155,20 @@ public class Server extends Thread{
         while(!game.isGameOver()){
         	updateTurn();
         	printStatus("It is now " + GameInfo.indexToPlayerName(this.turn) + "'s turn");
-        	printStatus("Tiles in pool: " + pool.remainingTiles());
+        	printStatus("Tiles in pool: " + pool.numTilesRemaining());
         	
-        	// receive move
+        	// broadcast the current state of the board to next player
         	System.out.println(game.displayGame());
         	outbox[turn].println(game.toString());
         	
+        	// receive the player's move
             try{
                 message = inbox[turn].readLine();
                 interpretMessage(message);
             }
             
             catch(Exception e){
-//                e.printStackTrace();
+            	// FIXME Analyze the exception thrown
                 printStatus("A client has disconnected. Relaying game termination to all clients");
                 this.turn = GameInfo.DISCONNECT;
                 break;
@@ -179,39 +191,41 @@ public class Server extends Thread{
 		System.out.println("\t" + date + " >> [[ Server ]] " + message);
 	}  
     
+	
+	
     // **********************************************************
-    // 						Start Game
+    // 						Rummikub startup
     // **********************************************************
     
     /**
-     * Configure and connect clients to sockets
+     * Connect to and configure clients
      */
     private void acceptClients(){
-    	String clientGrammer;
-    	clientGrammer = "clients";
-    	
-    	printStatus("Now ready to accept " + Integer.toString(clientSocket.length) + " clients");
+    	String clientGrammar = "clients";
+    	printStatus("Now ready to accept " + Integer.toString(clientSocket.length) + " " + clientGrammar);
     	
         try{
             serverSocket = new ServerSocket(PORT_NUM);	
             
             for(int i=0; i<clientSocket.length; i++){
             	if(i == 1)
-            		clientGrammer = "client";
+            		clientGrammar = "client";
+            	
                 printStatus("Waiting for " + Integer.toString(clientSocket.length - i)
-                				+ " more " + clientGrammer);
+                				+ " more " + clientGrammar);
                 
             	clientSocket[i] = serverSocket.accept();
             	inbox[i] = new BufferedReader(new InputStreamReader(clientSocket[i].getInputStream()));
                 outbox[i] = new PrintWriter(clientSocket[i].getOutputStream(), true);
-                outbox[i].println(i);
+                outbox[i].println(i);	// Tell the client which player number it is
 
                 printStatus("Accepted client " + Integer.toString(i+1));
             }
         }
         
         catch(Exception e){
-        	printStatus("Error accepting clients");
+        	// FIXME Make this error easier to distinguish from the command line
+        	printStatus("FATAL ERROR: Error accepting clients?");
             e.printStackTrace(); 
         }
     }
@@ -223,14 +237,16 @@ public class Server extends Thread{
     	int numPlayers;
     	
     	try{
-    		startTime = new Date();
     		numPlayers = clientSocket.length;
-    		
+
     		this.pool = new Pool();
     		this.hands = new Hand[numPlayers];
     		this.initialMelds = new Boolean[numPlayers];
 	    	this.game = new GameInfo(numPlayers);    	
+	    	this.turn = GameInfo.PLAYER1 - 1;	// FIXME
+	    	this.round = 0;
 	    	
+	    	// deal out starting hands
 	    	for(int i=0; i<hands.length; i++){
 	    		initialMelds[i] = false;
 	    		
@@ -239,8 +255,6 @@ public class Server extends Thread{
 	    		outbox[i].println(hands[i].toString());
 	    	}
 	    	
-	    	this.turn = GameInfo.PLAYER1 - 1;
-	    	this.round = 0;
     	}
     	catch(Exception e){
     		System.out.println("FATAL ERROR: unable to create a new game");
@@ -251,7 +265,7 @@ public class Server extends Thread{
     }
 
     // **********************************************************
-    // 						Gameplay
+    // 						Rummikub Gameplay
     // **********************************************************
     
     /**
@@ -269,7 +283,7 @@ public class Server extends Thread{
 	}
     
     /**
-     * Interprets the message sent from a client. 
+     * Interprets the message received from a client. 
      */
     private void interpretMessage(String message) throws Exception{
         if(message.equalsIgnoreCase("draw"))
@@ -287,7 +301,7 @@ public class Server extends Thread{
     	
     	nextTile = pool.drawTile();
     	hands[turn].addTile(nextTile);
-    	game.addTile(turn);
+    	game.addTile(turn);	// FIXME rethink names or protocols (should be done with / in previous line?)
     	
     	outbox[turn].println(nextTile.toString());
     	printStatus("No move made");
@@ -365,6 +379,7 @@ public class Server extends Thread{
      * Closes the sockets and streams of all clients
      */
     private void disconnectClients() {
+    	// close the client's streams and sockets
         for(int i=0; i<clientSocket.length; i++){
 	        try{
 	            inbox[i].close();
@@ -376,6 +391,7 @@ public class Server extends Thread{
 	        }
         }
 
+        // close the server's socket
         try {
 			serverSocket.close();
 		} catch (IOException e) {

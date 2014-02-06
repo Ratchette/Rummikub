@@ -41,7 +41,7 @@ public class Pool extends Set{
 	 * Get the number of tiles that remain int the pool
 	 * @return The number of tiles that remain in the pool
 	 */
-	public int remainingTiles(){
+	public int numTilesRemaining(){
 		return this.getNumTiles();
 	}
 	
@@ -66,7 +66,7 @@ public class Pool extends Set{
 		ArrayList<Tile> tempPool;
 		Tile next_tile;
 		
-		if(remainingTiles() == 0)
+		if(numTilesRemaining() == 0)
 			return null;
 		
 		tempPool = this.getTiles();

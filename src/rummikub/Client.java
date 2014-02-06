@@ -4,7 +4,7 @@
  * 
  * @since 2013-10-24
  * Created: October 24, 2013
- * Last Modified: November 30, 2013
+ * Last Modified: February 6, 2014
  */
 
 package rummikub;
